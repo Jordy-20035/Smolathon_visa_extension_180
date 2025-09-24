@@ -14,11 +14,18 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 def init_database():
+    # Load environment variables from .env file manually
+    from dotenv import load_dotenv
+    load_dotenv()  # This loads the .env file
+    
     # Get database URL from environment
     database_url = os.getenv("DATABASE_URL")
     if not database_url:
         logger.error("DATABASE_URL environment variable not set")
+        logger.error("Make sure you have a .env file in the backend directory")
         return False
+    
+    logger.info(f"Using database: {database_url.split('@')[-1]}")  # Log without password
     
     try:
         engine = create_engine(database_url)
