@@ -1,7 +1,10 @@
 import os
+from pathlib import Path
 from dotenv import load_dotenv
 
-load_dotenv()
+# Load .env from the root directory
+env_path = Path(__file__).parent.parent / '.env'
+load_dotenv(env_path)
 
 class Settings:
     PROJECT_NAME: str = "ЦОДД Смоленской области"
@@ -10,7 +13,8 @@ class Settings:
     # Database - now using environment variable
     DATABASE_URL: str = os.getenv("DATABASE_URL")
     if not DATABASE_URL:
-        raise ValueError("DATABASE_URL environment variable not set")
+        # Fallback for development
+        DATABASE_URL = "postgresql://codd_user:1234@localhost:5432/codd_db"
     
     # Security
     SECRET_KEY: str = os.getenv("SECRET_KEY", "fallback-insecure-key-change-me")
