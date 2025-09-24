@@ -1,0 +1,12 @@
+fastapi
+uvicorn[standard]
+sqlalchemy
+psycopg2-binary
+alembic
+pydantic
+python-multipart
+pandas
+openpyxl
+xlrd
+python-jose
+passlib[bcrypt]
