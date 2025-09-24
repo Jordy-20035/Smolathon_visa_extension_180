@@ -1,0 +1,44 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:15
+    environment:
+      POSTGRES_DB: codd_db
+      POSTGRES_USER: codd_user
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-1234}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./postgres/init:/docker-entrypoint-initdb.d  # For init scripts
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U codd_user -d codd_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    env_file:
+      - .env  # Load database credentials from .env file
+
+  backend:
+    build: .
+    ports:
+      - "8000:8000"
+    environment:
+      DATABASE_URL: postgresql://codd_user:${DB_PASSWORD:-1234}@postgres:5432/codd_db
+      SECRET_KEY: ${SECRET_KEY:-fallback-key}
+    depends_on:
+      postgres:
+        condition: service_healthy
+    volumes:
+      - ./uploads:/app/uploads
+      - ./app:/app/app  # For development hot-reload
+    command: >
+      sh -c "alembic upgrade head &&
+             python scripts/init_db.py &&
+             uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload"
+    env_file:
+      - .env
+
+volumes:
+  postgres_data:
