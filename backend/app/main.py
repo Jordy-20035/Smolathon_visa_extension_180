@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.config import settings
-from app.routers import auth, data, content, import_export
+from app.routers import auth, data, analytics, import_export, content
 
 app = FastAPI(
     title=settings.PROJECT_NAME,
@@ -25,8 +25,8 @@ app.add_middleware(
 app.include_router(auth.router)
 app.include_router(data.router)
 app.include_router(import_export.router)
-# app.include_router(content.router)
-# app.include_router(analytics.router)
+app.include_router(analytics.router)
+app.include_router(content.router)
 
 @app.get("/")
 def root():

@@ -1,4 +1,6 @@
 from sqlalchemy import Column, String, Integer, Numeric, DateTime, Date, Text, Boolean, ForeignKey, Index
+from datetime import datetime  
+from sqlalchemy.orm import relationship
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.sql import func
 import uuid
@@ -82,3 +84,20 @@ class TrafficLight(Base):
     __table_args__ = (
         Index('idx_traffic_lights_status', 'status'),
     )
+
+class ContentPage(Base):
+    __tablename__ = "content_pages"
+    
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    title = Column(String(200), nullable=False)
+    slug = Column(String(100), unique=True, nullable=False)
+    content = Column(Text, nullable=False)
+    is_published = Column(Boolean, default=False)
+    page_type = Column(String(20), nullable=False)  # news, service, about, statistics
+    
+    author_id = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=False)
+    created_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    
+    # Relationship
+    author = relationship("User", back_populates="content_pages")

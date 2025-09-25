@@ -1,9 +1,10 @@
+import json
 from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Query
 from fastapi.responses import StreamingResponse
 from sqlalchemy.orm import Session
 import io
 from typing import Optional
-
+from fastapi import Form
 from app.database import get_db
 from app import models
 from app.routers.auth import require_role
@@ -17,7 +18,7 @@ router = APIRouter(prefix="/api/v1", tags=["import-export"])
 async def import_data(
     model_type: str,
     file: UploadFile = File(...),
-    column_mapping: Optional[dict] = None,
+    column_mapping: Optional[str] = Form(None),
     sheet_name: Optional[str] = Query(None),
     db: Session = Depends(get_db),
     current_user: models.User = Depends(require_role("admin"))
@@ -53,15 +54,22 @@ async def import_data(
     else:
         raise HTTPException(status_code=400, detail=f"Unsupported model type: {model_type}")
     
-    # Use provided mapping or default
-    final_mapping = column_mapping if column_mapping else default_mapping
+    # FIX: Parse column mapping properly
+    if column_mapping:
+        try:
+            # Parse the JSON string into a dictionary
+            final_mapping = json.loads(column_mapping)
+        except json.JSONDecodeError as e:
+            raise HTTPException(status_code=400, detail=f"Invalid column mapping JSON: {str(e)}")
+    else:
+        final_mapping = default_mapping
     
     try:
         # Perform import
         result = import_func(
             file_content=content,
             file_type='excel' if file_type in ['xlsx', 'xls'] else 'csv',
-            column_mapping=final_mapping
+            column_mapping=final_mapping  # Now this is a dict, not a string
         )
         
         return ImportResponse(**result)
