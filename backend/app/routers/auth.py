@@ -1,7 +1,8 @@
-from fastapi import APIRouter, Depends, HTTPException, Header, Form
+from fastapi import APIRouter, Depends, HTTPException, Header
 from sqlalchemy.orm import Session
 from app.database import get_db
-from app import models, schemas
+from app import models
+from app.core_schemas import LoginRequest, LoginResponse, User
 
 router = APIRouter(prefix="/auth", tags=["authentication"])
 
@@ -13,32 +14,31 @@ def get_current_user(api_key: str = Header(..., alias="api-key"), db: Session = 
     return user
 
 def require_role(required_role: str):
-    """Role-based access control decorator"""
+    """Role-based access control dependency"""
     def role_checker(current_user: models.User = Depends(get_current_user)):
         if current_user.role != required_role and current_user.role != "admin":
             raise HTTPException(
-                status_code=403, 
+                status_code=403,
                 detail=f"Insufficient permissions. Required: {required_role}, has: {current_user.role}"
             )
         return current_user
     return role_checker
 
-
-# Single login endpoint using JSON (RESTful)
-@router.post("/login", response_model=schemas.LoginResponse)
-def login(credentials: schemas.LoginRequest, db: Session = Depends(get_db)):
+# Login endpoint
+@router.post("/login", response_model=LoginResponse)
+def login(credentials: LoginRequest, db: Session = Depends(get_db)):
     """Login using JSON request body"""
     user = db.query(models.User).filter(models.User.username == credentials.username).first()
     if not user:
         raise HTTPException(status_code=401, detail="User not found")
-    return {
-        "username": user.username,
-        "api_key": user.api_key,
-        "role": user.role
-    }
+    return LoginResponse(
+        username=user.username,
+        api_key=user.api_key,
+        role=user.role
+    )
 
 # Get current user info
-@router.get("/me", response_model=schemas.User)
+@router.get("/me", response_model=User)
 def get_current_user_info(current_user: models.User = Depends(get_current_user)):
     """Get current user information"""
     return current_user

@@ -1,13 +1,13 @@
 from sqlalchemy.orm import Session
 from sqlalchemy import and_, or_, func
 from typing import List, Optional, Type, TypeVar, Generic, Any
-from app import models, schemas
+from app import models, core_schemas
 import uuid
 
 # Use the actual model classes for type hinting
 ModelType = TypeVar("ModelType")
-CreateSchemaType = TypeVar("CreateSchemaType", bound=schemas.BaseModel)
-UpdateSchemaType = TypeVar("UpdateSchemaType", bound=schemas.BaseModel)
+CreateSchemaType = TypeVar("CreateSchemaType", bound=core_schemas.BaseModel)
+UpdateSchemaType = TypeVar("UpdateSchemaType", bound=core_schemas.BaseModel)
 
 class CRUDBase(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
     def __init__(self, model: Type[ModelType]):
@@ -54,7 +54,7 @@ class CRUDBase(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
         return obj
 
 # Fine-specific CRUD operations
-class CRUDFine(CRUDBase[models.Fine, schemas.FineCreate, schemas.FineUpdate]):
+class CRUDFine(CRUDBase[models.Fine, core_schemas.FineCreate, core_schemas.FineUpdate]):
     def get_with_relations(self, db: Session, id: uuid.UUID) -> Optional[models.Fine]:
         return db.query(self.model).\
             join(models.Vehicle).\
@@ -92,7 +92,7 @@ class CRUDFine(CRUDBase[models.Fine, schemas.FineCreate, schemas.FineUpdate]):
             scalar()
 
 # Accident-specific CRUD operations
-class CRUDAccident(CRUDBase[models.Accident, schemas.AccidentCreate, schemas.AccidentUpdate]):
+class CRUDAccident(CRUDBase[models.Accident, core_schemas.AccidentCreate, core_schemas.AccidentUpdate]):
     def get_with_relations(self, db: Session, id: uuid.UUID) -> Optional[models.Accident]:
         return db.query(self.model).\
             join(models.Location).\
@@ -118,7 +118,7 @@ class CRUDAccident(CRUDBase[models.Accident, schemas.AccidentCreate, schemas.Acc
             scalar()
 
 # TrafficLight-specific CRUD operations
-class CRUDTrafficLight(CRUDBase[models.TrafficLight, schemas.TrafficLightCreate, schemas.TrafficLightUpdate]):
+class CRUDTrafficLight(CRUDBase[models.TrafficLight, core_schemas.TrafficLightCreate, core_schemas.TrafficLightUpdate]):
     def get_with_relations(self, db: Session, id: uuid.UUID) -> Optional[models.TrafficLight]:
         return db.query(self.model).\
             join(models.Location).\
@@ -142,8 +142,8 @@ class CRUDTrafficLight(CRUDBase[models.TrafficLight, schemas.TrafficLightCreate,
 crud_fine: CRUDFine = CRUDFine(models.Fine)
 crud_accident: CRUDAccident = CRUDAccident(models.Accident)
 crud_traffic_light: CRUDTrafficLight = CRUDTrafficLight(models.TrafficLight)
-crud_location: CRUDBase[models.Location, schemas.LocationCreate, Any] = CRUDBase(models.Location)
-crud_vehicle: CRUDBase[models.Vehicle, schemas.VehicleCreate, Any] = CRUDBase(models.Vehicle)
+crud_location: CRUDBase[models.Location, core_schemas.LocationCreate, Any] = CRUDBase(models.Location)
+crud_vehicle: CRUDBase[models.Vehicle, core_schemas.VehicleCreate, Any] = CRUDBase(models.Vehicle)
 
 # Helper functions for relations
 def get_fines_with_relations(

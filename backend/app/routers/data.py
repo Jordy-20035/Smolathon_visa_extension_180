@@ -4,13 +4,13 @@ from typing import List, Optional
 import uuid
 
 from app.database import get_db
-from app import models, schemas, crud
+from app import models, core_schemas, crud
 from app.routers.auth import get_current_user, require_role
 
 router = APIRouter(prefix="/api/v1", tags=["data"])
 
 # Fines endpoints
-@router.get("/fines/", response_model=schemas.FineList)
+@router.get("/fines/", response_model=core_schemas.FineList)
 def read_fines(
     skip: int = 0,
     limit: int = 100,
@@ -40,7 +40,7 @@ def read_fines(
     
     return {"items": fines, "total": total}
 
-@router.get("/fines/{fine_id}", response_model=schemas.Fine)
+@router.get("/fines/{fine_id}", response_model=core_schemas.Fine)
 def read_fine(
     fine_id: uuid.UUID,
     db: Session = Depends(get_db),
@@ -57,19 +57,19 @@ def read_fine(
     
     return fine
 
-@router.post("/fines/", response_model=schemas.Fine, status_code=status.HTTP_201_CREATED)
+@router.post("/fines/", response_model=core_schemas.Fine, status_code=status.HTTP_201_CREATED)
 def create_fine(
-    fine: schemas.FineCreate,
+    fine: core_schemas.FineCreate,
     db: Session = Depends(get_db),
     current_user: models.User = Depends(require_role("admin"))
 ):
     """Create a new fine (admin only)"""
     return crud.crud_fine.create(db, obj_in=fine)
 
-@router.put("/fines/{fine_id}", response_model=schemas.Fine)
+@router.put("/fines/{fine_id}", response_model=core_schemas.Fine)
 def update_fine(
     fine_id: uuid.UUID,
-    fine_update: schemas.FineUpdate,
+    fine_update: core_schemas.FineUpdate,
     db: Session = Depends(get_db),
     current_user: models.User = Depends(require_role("admin"))
 ):
@@ -95,7 +95,7 @@ def delete_fine(
     return {"message": "Fine deleted successfully"}
 
 # Accidents endpoints
-@router.get("/accidents/", response_model=schemas.AccidentList)
+@router.get("/accidents/", response_model=core_schemas.AccidentList)
 def read_accidents(
     skip: int = 0,
     limit: int = 100,
@@ -112,7 +112,7 @@ def read_accidents(
     
     return {"items": accidents, "total": total}
 
-@router.get("/accidents/{accident_id}", response_model=schemas.Accident)
+@router.get("/accidents/{accident_id}", response_model=core_schemas.Accident)
 def read_accident(
     accident_id: uuid.UUID,
     db: Session = Depends(get_db),
@@ -128,16 +128,16 @@ def read_accident(
     
     return accident
 
-@router.post("/accidents/", response_model=schemas.Accident, status_code=status.HTTP_201_CREATED)
+@router.post("/accidents/", response_model=core_schemas.Accident, status_code=status.HTTP_201_CREATED)
 def create_accident(
-    accident: schemas.AccidentCreate,
+    accident: core_schemas.AccidentCreate,
     db: Session = Depends(get_db),
     current_user: models.User = Depends(require_role("admin"))
 ):
     return crud.crud_accident.create(db, obj_in=accident)
 
 # Traffic Lights endpoints
-@router.get("/traffic-lights/", response_model=schemas.TrafficLightList)
+@router.get("/traffic-lights/", response_model=core_schemas.TrafficLightList)
 def read_traffic_lights(
     skip: int = 0,
     limit: int = 100,
@@ -156,7 +156,7 @@ def read_traffic_lights(
     
     return {"items": traffic_lights, "total": total}
 
-@router.get("/traffic-lights/{traffic_light_id}", response_model=schemas.TrafficLight)
+@router.get("/traffic-lights/{traffic_light_id}", response_model=core_schemas.TrafficLight)
 def read_traffic_light(
     traffic_light_id: uuid.UUID,
     db: Session = Depends(get_db),
@@ -168,16 +168,16 @@ def read_traffic_light(
         raise HTTPException(status_code=404, detail="Traffic light not found")
     return traffic_light
 
-@router.post("/traffic-lights/", response_model=schemas.TrafficLight, status_code=status.HTTP_201_CREATED)
+@router.post("/traffic-lights/", response_model=core_schemas.TrafficLight, status_code=status.HTTP_201_CREATED)
 def create_traffic_light(
-    traffic_light: schemas.TrafficLightCreate,
+    traffic_light: core_schemas.TrafficLightCreate,
     db: Session = Depends(get_db),
     current_user: models.User = Depends(require_role("admin"))
 ):
     return crud.crud_traffic_light.create(db, obj_in=traffic_light)
 
 # Locations endpoints
-@router.get("/locations/", response_model=List[schemas.Location])
+@router.get("/locations/", response_model=List[core_schemas.Location])
 def read_locations(
     skip: int = 0,
     limit: int = 100,
@@ -187,9 +187,9 @@ def read_locations(
     """Get list of locations"""
     return crud.crud_location.get_multi(db, skip=skip, limit=limit)
 
-@router.post("/locations/", response_model=schemas.Location, status_code=status.HTTP_201_CREATED)
+@router.post("/locations/", response_model=core_schemas.Location, status_code=status.HTTP_201_CREATED)
 def create_location(
-    location: schemas.LocationCreate,
+    location: core_schemas.LocationCreate,
     db: Session = Depends(get_db),
     current_user: models.User = Depends(require_role("admin"))
 ):
