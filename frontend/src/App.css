@@ -1,0 +1,20 @@
+/* src/App.css */
+
+/* Tailwind base imports */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Optional global overrides */
+body {
+  @apply bg-gray-100 text-gray-800;
+}
+
+a {
+  @apply text-blue-500 hover:text-blue-700;
+}
+
+/* Example: app container */
+.App {
+  @apply flex flex-col items-center justify-center min-h-screen;
+}
