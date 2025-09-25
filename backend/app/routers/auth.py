@@ -23,23 +23,19 @@ def require_role(required_role: str):
         return current_user
     return role_checker
 
-# Option 1: Using query parameters (simpler)
-@router.post("/login")
-def login(username: str, db: Session = Depends(get_db)):
-    """Login and get API key"""
-    user = db.query(models.User).filter(models.User.username == username).first()
-    if not user:
-        raise HTTPException(status_code=401, detail="User not found")
-    return {"username": user.username, "api_key": user.api_key, "role": user.role}
 
-# Option 2: Using request body (more RESTful)
-@router.post("/login-json")
-def login_json(credentials: schemas.LoginRequest, db: Session = Depends(get_db)):
+# Single login endpoint using JSON (RESTful)
+@router.post("/login", response_model=schemas.LoginResponse)
+def login(credentials: schemas.LoginRequest, db: Session = Depends(get_db)):
     """Login using JSON request body"""
     user = db.query(models.User).filter(models.User.username == credentials.username).first()
     if not user:
         raise HTTPException(status_code=401, detail="User not found")
-    return {"username": user.username, "api_key": user.api_key, "role": user.role}
+    return {
+        "username": user.username,
+        "api_key": user.api_key,
+        "role": user.role
+    }
 
 # Get current user info
 @router.get("/me", response_model=schemas.User)

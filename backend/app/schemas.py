@@ -125,9 +125,16 @@ class UserBase(BaseModel):
     username: str
     role: str
 
+class UserCreate(BaseModel):
+    username: str
+    role: str = "guest"
+
 class User(UserBase):
     id: uuid.UUID
+    api_key: str
     created_at: datetime
+    
+    model_config = ConfigDict(from_attributes=True)
 
 class LoginRequest(BaseModel):
     username: str
