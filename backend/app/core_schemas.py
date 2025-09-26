@@ -1,7 +1,8 @@
 from pydantic import BaseModel, ConfigDict
 from datetime import datetime, date
-from typing import Optional, List
+from typing import Optional, List, Dict
 import uuid
+
 
 # Base schemas with common fields
 class LocationBase(BaseModel):
@@ -125,8 +126,30 @@ class UserBase(BaseModel):
     username: str
     role: str
 
+class UserCreate(BaseModel):
+    username: str
+    role: str = "guest"
+
 class User(UserBase):
     id: uuid.UUID
+    api_key: str
     created_at: datetime
+    
+    model_config = ConfigDict(from_attributes=True)
+
+class LoginRequest(BaseModel):
+    username: str
+
+class LoginResponse(BaseModel):
+    username: str
+    api_key: str
+    role: str
+
+class ColumnMapping(BaseModel):
+    plate_number: Optional[str] = None
+    amount: Optional[str] = None
+    issued_at: Optional[str] = None
+    violation_code: Optional[str] = None
+    # Add other columns you need to map
     
     model_config = ConfigDict(from_attributes=True)
