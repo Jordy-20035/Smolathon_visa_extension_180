@@ -2,6 +2,7 @@ import { BrowserRouter as Router, Routes, Route, Link } from "react-router-dom";
 import Home from "./pages/Home";
 import Admin from "./pages/Admin";
 import Login from "./pages/Login";
+import Statistics from "./pages/Statistics";
 
 function App() {
   return (
@@ -18,6 +19,9 @@ function App() {
           <Link to="/admin" className="hover:text-blue-600">
             Admin
           </Link>
+          <Link to="/statistics" className="hover:text-blue-600">
+            Statistics
+          </Link>
           <Link
             to="/login"
             className="px-3 py-1 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition"
@@ -32,6 +36,7 @@ function App() {
         <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/admin" element={<Admin />} />
+          <Route path="/statistics" element={<Statistics />} />
           <Route path="/login" element={<Login />} />
         </Routes>
       </main>

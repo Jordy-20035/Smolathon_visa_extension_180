@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { ChevronRight, Phone, Mail, MapPin, Clock, Users, Shield, Heart, Zap, ArrowRight, Calendar, Star, CheckCircle } from "lucide-react";
+import logo from "../assets/logo.png"; // adjust path if needed
+
 
 // Enhanced data with more engaging content
 const team = [
@@ -130,7 +132,9 @@ export default function Home() {
             <Star className="w-4 h-4 text-yellow-300" />
             <span className="text-sm font-medium">Работаем с 2010 года • 200+ проектов</span>
           </div>
-          
+          <div className="max-w-7xl mx-auto text-center relative z-10">
+          {/* Logo */}
+          <img src={logo} alt="Smolathon Logo" className="mx-auto mb-6 w-64 h-auto" />
           <h1 className="text-5xl md:text-7xl font-bold mb-6 leading-tight bg-gradient-to-r from-white to-green-100 bg-clip-text text-transparent">
             ЦОДД Смоленск
           </h1>
@@ -161,6 +165,7 @@ export default function Home() {
               </div>
             ))}
           </div>
+        </div>
         </div>
       </section>
 
