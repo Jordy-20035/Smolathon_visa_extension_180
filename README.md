@@ -44,6 +44,7 @@
 
 
 <img width="461" height="875" alt="PHONE" src="https://github.com/user-attachments/assets/50c138bb-df2a-47c7-9cdf-63e6c19ae216" />
+
 <img width="462" height="877" alt="phone2" src="https://github.com/user-attachments/assets/ebf61843-c85e-4635-a9f7-bf36fc53cf2c" />
 
 *Скриншот: Мобильный вид (360px)*
@@ -234,7 +235,7 @@ uvicorn main:app --port 8000
 
 ## 🎥 Демонстрация решения
 
-**Видео-презентация:** [Ссылка на видео в репозитории]([presentation/demo.mp4](https://github.com/hackathonsrus/Smolathon_visa_extension_180/blob/main/docs/demo.mp4))
+**Видео-презентация:** [Ссылка на видео в репозитории](https://github.com/hackathonsrus/Smolathon_visa_extension_180/blob/main/docs/demo.mp4)
 
 **Сценарии использования:**
 1. **Гражданин** изучает статистику ДТП за период
