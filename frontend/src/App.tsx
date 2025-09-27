@@ -31,18 +31,18 @@ const Navigation = () => {
       </Link>
       
       <div className="space-x-4">
-        <Link to="/" className="hover:text-blue-600">Home</Link>
+        <Link to="/" className="hover:text-blue-600">Главный</Link>
         
         {/* Show Dashboard for all logged-in users */}
         {user && (
-          <Link to="/dashboard" className="hover:text-blue-600">Dashboard</Link>
+          <Link to="/dashboard" className="hover:text-blue-600">Дашборд</Link>
         )}
         
-        <Link to="/statistics" className="hover:text-blue-600">Statistics</Link>
+        <Link to="/statistics" className="hover:text-blue-600">Статистики</Link>
         
         {/* Show Admin link ONLY for admin/redactor users */}
         {user && (user.role === 'admin' || user.role === 'redactor') && (
-          <Link to="/admin" className="hover:text-blue-600">Admin</Link>
+          <Link to="/admin" className="hover:text-blue-600">Админ</Link>
         )}
         
         {/* Show Login/Logout based on auth state */}

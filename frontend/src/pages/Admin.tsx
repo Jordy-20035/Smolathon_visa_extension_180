@@ -130,16 +130,6 @@ const Admin: React.FC = () => {
               </p>
             </div>
             
-            <div className="bg-yellow-50 p-3 rounded">
-              <p className="text-sm text-yellow-800">
-                <strong>Note:</strong> For files with Russian headers, the system will automatically map:
-                <br/>- "Дата нарушения" → Issue Date
-                <br/>- "Номер автомобиля" → Plate Number
-                <br/>- "Код нарушения" → Violation Code
-                <br/>- "Сумма штрафа" → Amount
-              </p>
-            </div>
-            
             <button 
               type="submit" 
               disabled={loading || !file}
