@@ -18,11 +18,18 @@ export const api = {
   getPublicDashboardAnalytics: `${API_BASE_URL}/analytics/public/dashboard`,
 
   
-  // Import/Export
-  importData: `${API_BASE_URL}/import`,
-  exportData: `${API_BASE_URL}/export`,
-  
   // Content
   getContentPages: `${API_BASE_URL}/content/pages`,
   getNews: `${API_BASE_URL}/content/news`,
+
+
+    // Import/Export
+  importData: `${API_BASE_URL}/api/v1/import`,
+  exportData: `${API_BASE_URL}/api/v1/export`,
+
+
+  // Add specific endpoints for your functionality
+  getColumnMappings: (modelType: string) => `${API_BASE_URL}/api/v1/import/mappings/${modelType}`,
+  exportEvacuations: `${API_BASE_URL}/api/v1/evacuations/export`,
+  downloadTemplate: `${API_BASE_URL}/api/v1/evacuations/template`,
 };

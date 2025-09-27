@@ -5,6 +5,9 @@ import Login from "./pages/Login";
 import Statistics from "./pages/Statistics";
 import Dashboard from "./pages/Dashboard";
 import { useEffect, useState } from "react";
+import ImportData from './pages/ImportData';
+import ExportData from './pages/ExportData';
+
 
 // Create a separate Navigation component to handle auth state
 const Navigation = () => {
@@ -81,6 +84,9 @@ function App() {
           <Route path="/admin" element={<Admin />} />
           <Route path="/statistics" element={<Statistics />} />
           <Route path="/login" element={<Login />} />
+          <Route path="/admin/import" element={<ImportData />} />
+          <Route path="/admin/export" element={<ExportData />} />
+          
         </Routes>
       </main>
 

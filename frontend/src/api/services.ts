@@ -91,15 +91,43 @@ export class ApiService {
   static async importData(modelType: string, file: File, columnMapping: object = {}) {
     const formData = new FormData();
     formData.append('file', file);
-    formData.append('column_mapping', JSON.stringify(columnMapping));
     
+    // Only add column_mapping if it's not empty
+    if (Object.keys(columnMapping).length > 0) {
+      formData.append('column_mapping', JSON.stringify(columnMapping));
+    }
+    
+    // Remove the Content-Type header for FormData (browser will set it automatically with boundary)
     return this.request(`${api.importData}/${modelType}`, {
       method: 'POST',
       headers: {
         'api-key': localStorage.getItem('api_key') || '',
+        // Remove 'Content-Type' - let browser set it for FormData
       },
       body: formData,
     });
+  }
+
+  // Add this new method to get column mappings
+  static async getColumnMappings(modelType: string) {
+    return this.request(api.getColumnMappings(modelType));
+  }
+
+  // Add export method
+  static async exportData(exportType: string, format: string = 'csv') {
+    // For binary file downloads, we need to handle the response differently
+    const token = localStorage.getItem('api_key');
+    const response = await fetch(`${api.exportData}/${exportType}?format=${format}`, {
+      headers: {
+        'api-key': token || '',
+      },
+    });
+    
+    if (!response.ok) {
+      throw new Error(`Export failed: ${response.statusText}`);
+    }
+    
+    return response.blob(); // Return blob for file download
   }
 
   // Content
