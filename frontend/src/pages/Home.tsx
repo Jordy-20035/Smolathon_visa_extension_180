@@ -132,12 +132,17 @@ export default function Home() {
             <Star className="w-4 h-4 text-yellow-300" />
             <span className="text-sm font-medium">Работаем с 2010 года • 200+ проектов</span>
           </div>
-          <div className="max-w-7xl mx-auto text-center relative z-10">
-          {/* Logo */}
-         
-          <div className="mx-auto mb-12 w-64 h-64 flex items-center       justify-center overflow-hidden">
-           <img src={logo} alt="Smolathon Logo" className="transform scale-125" />
+          {/* Logo Container with White Background */}
+          <div className="mx-auto mb-12 flex items-center justify-center">
+            <div className="bg-white rounded-2xl shadow-xl p-6">
+              <img 
+                src={logo} 
+                alt="Smolathon Logo" 
+                className="w-48 h-auto mx-auto"
+              />
+            </div>
           </div>
+
           <h1 className="text-5xl md:text-7xl font-bold mb-6 leading-tight bg-gradient-to-r from-white to-green-100 bg-clip-text text-transparent">
             ЦОДД Смоленск
           </h1>
@@ -168,7 +173,6 @@ export default function Home() {
               </div>
             ))}
           </div>
-        </div>
         </div>
       </section>
 
