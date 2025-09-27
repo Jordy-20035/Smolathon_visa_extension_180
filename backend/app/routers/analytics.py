@@ -109,20 +109,20 @@ def get_dashboard_analytics(
     
     return {
         "fines": {
-            "total_count": fines_data["total_count"],  # FIXED: Use dictionary access
+            "total_count": fines_data["total_count"],  
             "total_amount": fines_data["total_amount"],
             "time_series": fines_data["time_series"],
             "by_district": fines_data["by_district"]
         },
         "accidents": {
-            "total_count": accidents_data["total_count"],  # FIXED
+            "total_count": accidents_data["total_count"], 
             "time_series": accidents_data["time_series"],
             "by_severity": accidents_data["by_severity"],
             "by_type": accidents_data["by_type"]
         },
         "traffic_lights": traffic_lights_data,
         "evacuations": {
-            "total_count": evacuations_data["total_count"],  # FIXED
+            "total_count": evacuations_data["total_count"],  
             "total_revenue": evacuations_data["total_revenue"],
             "total_dispatches": evacuations_data["total_dispatches"],
             "avg_tow_trucks": evacuations_data["avg_tow_trucks"],

@@ -74,6 +74,9 @@ class Accident(Base):
         Index('idx_accidents_visibility', 'visibility'),
     )
 
+    location = relationship("Location", backref="accidents")
+
+
 class TrafficLight(Base):
     __tablename__ = "traffic_lights"
     
@@ -88,6 +91,9 @@ class TrafficLight(Base):
     __table_args__ = (
         Index('idx_traffic_lights_status', 'status'),
     )
+
+    location = relationship("Location", backref="traffic_lights")
+
 
 class ContentPage(Base):
     __tablename__ = "content_pages"

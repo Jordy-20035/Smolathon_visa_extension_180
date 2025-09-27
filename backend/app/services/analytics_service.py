@@ -3,6 +3,11 @@ from sqlalchemy import func, extract, case, and_
 from datetime import date, datetime, timedelta
 from typing import Optional, Dict, List
 from app import models
+from app.models import TrafficLight, Location 
+import logging
+
+logger = logging.getLogger(__name__)
+
 
 class AnalyticsService:
     def __init__(self, db: Session):
@@ -107,28 +112,49 @@ class AnalyticsService:
             "by_type": by_type
         }
 
-    def get_traffic_lights_analytics(self) -> Dict:
-        """Get traffic lights status analytics"""
-        status_query = self.db.query(
-            models.TrafficLight.status,
-            func.count(models.TrafficLight.id)
-        ).group_by(models.TrafficLight.status)
-        
-        by_status = {row.status: row.count for row in status_query.all()}
-        
-        # By district
-        district_query = self.db.query(
-            models.Location.district,
-            func.count(models.TrafficLight.id)
-        ).join(models.TrafficLight).group_by(models.Location.district)
-        
-        by_district = {row.district or 'Unknown': row.count for row in district_query.all()}
-        
-        return {
-            "total_count": sum(by_status.values()),
-            "by_status": by_status,
-            "by_district": by_district
-        }
+# In analytics_service.py - fix the get_traffic_lights_analytics method
+
+    def get_traffic_lights_analytics(self):
+        """Get traffic lights analytics"""
+        try:
+            # Get total count directly
+            total_count = self.db.query(func.count(TrafficLight.id)).scalar() or 0
+            
+            # Get traffic lights count by status
+            status_counts = self.db.query(
+                TrafficLight.status,
+                func.count(TrafficLight.id)
+            ).group_by(TrafficLight.status).all()
+            
+            by_status = {}
+            for status, count in status_counts:
+                by_status[status] = int(count) if count else 0
+            
+            # Get traffic lights count by district
+            district_counts = self.db.query(
+                Location.district,
+                func.count(TrafficLight.id)
+            ).join(TrafficLight.location).group_by(Location.district).all()
+            
+            by_district = {}
+            for district, count in district_counts:
+                if district:
+                    by_district[district] = int(count) if count else 0
+            
+            return {
+                "total_count": total_count,
+                "by_status": by_status,
+                "by_district": by_district
+            }
+            
+        except Exception as e:
+            logger.error(f"Traffic lights analytics error: {e}")
+            return {
+                "total_count": 0,
+                "by_status": {},
+                "by_district": {}
+            }
+
     # Add to backend/app/services/analytics_service.py
 
     def get_evacuations_analytics(self, start_date: Optional[date] = None, end_date: Optional[date] = None):

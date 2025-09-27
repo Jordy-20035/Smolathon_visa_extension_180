@@ -82,24 +82,20 @@ def generate_traffic_lights_data():
     return pd.DataFrame(traffic_lights)
 
 def generate_evacuations_data():
-    """Generate evacuations data matching the structure from ЦОДД.xlsx"""
+    """Generate PROPER evacuation data with only numeric fields"""
     evacuations = []
-    months_ru = ['Январь', 'Февраль', 'Март', 'Апрель', 'Май', 'Июнь', 
-                'Июль', 'Август', 'Сентябрь', 'Октябрь', 'Ноябрь', 'Декабрь']
     
     for year in [2024, 2025]:
-        for month_num, month_name in enumerate(months_ru, 1):
-            if year == 2025 and month_num > 8:  # Only up to August 2025
+        for month in range(1, 13):
+            if year == 2025 and month > 8:  # Only up to August 2025
                 continue
                 
             evacuations.append({
-                'год': year,
-                'месяц': month_name,
-                'маршрут': f'Маршрут {month_num}',
-                'количество_эвакуаторов': random.randint(3, 8),
-                'количество_выездов': random.randint(80, 200),
-                'количество_эвакуаций': random.randint(60, 150),
-                'доход_штрафстоянка': random.randint(500000, 2000000)  # in rubles
+                'evacuated_at': f"{year}-{month:02d}-01",  # Simple date
+                'towing_vehicles_count': random.randint(3, 8),
+                'dispatches_count': random.randint(80, 200),
+                'evacuations_count': random.randint(60, 150),
+                'revenue': random.randint(500000, 2000000)
             })
     
     return pd.DataFrame(evacuations)
@@ -118,13 +114,13 @@ print("Generating evacuations data...")
 evacuations_df = generate_evacuations_data()
 
 # Save to Excel file with multiple sheets
-with pd.ExcelWriter('ЦОДД_полные_данные.xlsx', engine='openpyxl') as writer:
+with pd.ExcelWriter('ЦОДД_полные_данные_исправлено.xlsx', engine='openpyxl') as writer:
     fines_df.to_excel(writer, sheet_name='Штрафы', index=False)
     accidents_df.to_excel(writer, sheet_name='ДТП', index=False)
     traffic_lights_df.to_excel(writer, sheet_name='Светофоры', index=False)
     evacuations_df.to_excel(writer, sheet_name='Эвакуации', index=False)
 
-print("File 'ЦОДД_полные_данные.xlsx' created successfully!")
+print("File 'ЦОДД_полные_данные_исправлено.xlsx' created successfully!")
 print(f"Fines records: {len(fines_df)}")
 print(f"Accidents records: {len(accidents_df)}")
 print(f"Traffic lights records: {len(traffic_lights_df)}")

@@ -96,7 +96,7 @@ const Dashboard: React.FC = () => {
           <h3 className="font-semibold text-lg mb-2">Fines</h3>
           <p className="text-2xl font-bold text-blue-600">{getFinesCount()}</p>
           <p className="text-sm text-gray-600">
-            Total amount: ${getFinesAmount().toLocaleString()}
+            Total amount: {getFinesAmount().toLocaleString('ru-RU')}₽
           </p>
         </div>
         
@@ -116,7 +116,7 @@ const Dashboard: React.FC = () => {
           <h3 className="font-semibold text-lg mb-2">Evacuations</h3>
           <p className="text-2xl font-bold text-purple-600">{getEvacuationsCount()}</p>
           <p className="text-sm text-gray-600">
-            Revenue: ${getEvacuationsRevenue().toLocaleString()}
+            Revenue: {getEvacuationsRevenue().toLocaleString('ru-RU')}₽
           </p>
           <p className="text-sm text-gray-600">
             Dispatches: {getEvacuationsDispatches()}

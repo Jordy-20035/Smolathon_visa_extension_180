@@ -48,10 +48,10 @@ DEFAULT_COLUMN_MAPPINGS = {
         "Адрес": "address"
     },
     "evacuations": {
-        "Дата": "evacuated_at",
-        "Количество эвакуаторов на линии": "towing_vehicles_count",
-        "Количество выездов": "dispatches_count", 
-        "Количество эвакуаций": "evacuations_count",
-        "Сумма поступлений по  штрафстоянке": "revenue"  
+        "evacuated_at": "evacuated_at",
+        "towing_vehicles_count": "towing_vehicles_count",
+        "dispatches_count": "dispatches_count", 
+        "evacuations_count": "evacuations_count",
+        "revenue": "revenue"
     }
 }

@@ -96,8 +96,14 @@ export class ApiService {
 
 
   // Import/Export 
+// In services.ts - fix the getColumnMappings method
   static async getColumnMappings(modelType: string) {
-    const res = await axios.get(api.getColumnMappings(modelType));
+    const token = localStorage.getItem('api_key');
+    const headers: Record<string, string> = {
+      ...(token && { 'api-key': token }),
+    };
+    
+    const res = await axios.get(api.getColumnMappings(modelType), { headers });
     return res.data;
   }
 
