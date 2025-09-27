@@ -1,4 +1,5 @@
 import { api } from './api';
+import axios from "axios";
 import { 
   LoginResponse, 
   Fine, 
@@ -10,20 +11,7 @@ import {
   ListResponse 
 } from '../types';
 
-
-// Response types
-export interface ImportResponse {
-  total_processed: number;
-  successful: number;
-  failed: number;
-  errors: string[];
-}
-
-export interface ColumnMappingResponse {
-  model_type: string;
-  available_mappings: Record<string, string>;
-  description: string;
-}
+const API_URL = "http://localhost:8000"; 
 
 
 export class ApiService {
@@ -103,29 +91,19 @@ export class ApiService {
 
 
   // Import/Export
-  static async importData(modelType: string, file: File, columnMapping: object = {}) {
-    const formData = new FormData();
-    formData.append('file', file);
-    
-    // Only add column_mapping if it's not empty
-    if (Object.keys(columnMapping).length > 0) {
-      formData.append('column_mapping', JSON.stringify(columnMapping));
-    }
-    
-    // Remove the Content-Type header for FormData (browser will set it automatically with boundary)
-    return this.request(`${api.importData}/${modelType}`, {
-      method: 'POST',
-      headers: {
-        'api-key': localStorage.getItem('api_key') || '',
-        // Remove 'Content-Type' - let browser set it for FormData
-      },
-      body: formData,
-    });
+  async getColumnMappings(modelType: string) {
+    const res = await axios.get(`${API_URL}/files/mappings/${modelType}`);
+    return res.data;
   }
 
-  // Add this new method to get column mappings
-  static async getColumnMappings(modelType: string) {
-    return this.request(api.getColumnMappings(modelType));
+  async importData(modelType: string, file: File, columnMappings: Record<string, string>) {
+    const formData = new FormData();
+    formData.append("file", file);
+    formData.append("column_mappings", JSON.stringify(columnMappings));
+    const res = await axios.post(`${API_URL}/files/import/${modelType}`, formData, {
+      headers: { "Content-Type": "multipart/form-data" },
+    });
+    return res.data;
   }
 
   // Add export method
