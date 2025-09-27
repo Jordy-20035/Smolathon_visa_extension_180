@@ -2,6 +2,26 @@ import React, { useState, useEffect } from 'react';
 import { ApiService } from '../api/services';
 import { useNavigate } from 'react-router-dom';
 
+// Content types matching your backend schemas
+interface ContentPage {
+  id: string;
+  title: string;
+  slug: string;
+  content: string;
+  is_published: boolean;
+  page_type: string;
+  author_id: string;
+  created_at: string;
+  updated_at: string;
+}
+
+interface ContentPageCreate {
+  title: string;
+  slug: string;
+  content: string;
+  is_published: boolean;
+  page_type: string;
+}
 
 const Admin: React.FC = () => {
   const [user, setUser] = useState<any>(null);
@@ -12,6 +32,12 @@ const Admin: React.FC = () => {
   const [result, setResult] = useState<any>(null);
   const navigate = useNavigate();
 
+  // Content Management State
+  const [pages, setPages] = useState<ContentPage[]>([]);
+  const [editingPage, setEditingPage] = useState<ContentPage | null>(null);
+  const [isCreating, setIsCreating] = useState(false);
+  const [contentLoading, setContentLoading] = useState(false);
+
   // Check authentication on component mount
   useEffect(() => {
     const userData = localStorage.getItem('user');
@@ -19,7 +45,6 @@ const Admin: React.FC = () => {
       const userObj = JSON.parse(userData);
       setUser(userObj);
       
-      // Redirect if not admin or redactor
       if (userObj.role !== 'admin' && userObj.role !== 'redactor') {
         navigate('/dashboard');
       }
@@ -27,6 +52,27 @@ const Admin: React.FC = () => {
       navigate('/login');
     }
   }, [navigate]);
+
+  // Load content pages when content tab is active
+  useEffect(() => {
+    if (activeTab === 'content') {
+      loadContentPages();
+    }
+  }, [activeTab]);
+
+  const loadContentPages = async () => {
+    setContentLoading(true);
+    try {
+      // This endpoint needs to be added to your services.ts
+      const contentPages = await ApiService.getContentPages();
+      setPages(contentPages);
+    } catch (error) {
+      console.error('Failed to load content pages:', error);
+      alert('Failed to load content pages');
+    } finally {
+      setContentLoading(false);
+    }
+  };
 
   const handleImport = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -50,6 +96,65 @@ const Admin: React.FC = () => {
     } finally {
       setLoading(false);
     }
+  };
+
+  // Content Management Functions
+  const handleCreatePage = async (pageData: ContentPageCreate | Partial<ContentPage>) => {
+    try {
+      // Type guard to ensure we have all required fields for creation
+      if (!pageData.title || !pageData.slug || !pageData.content || !pageData.page_type) {
+        throw new Error('Missing required fields for page creation');
+      }
+      
+      const createData: ContentPageCreate = {
+        title: pageData.title,
+        slug: pageData.slug,
+        content: pageData.content,
+        page_type: pageData.page_type,
+        is_published: pageData.is_published || false
+      };
+      
+      await ApiService.createPage(createData);
+      await loadContentPages();
+      setIsCreating(false);
+      alert('Page created successfully!');
+    } catch (error) {
+      console.error('Failed to create page:', error);
+      alert('Failed to create page');
+    }
+  };
+
+  const handleUpdatePage = async (pageId: string, updates: Partial<ContentPage>) => {
+    try {
+      await ApiService.updatePage(pageId, updates);
+      await loadContentPages();
+      setEditingPage(null);
+      alert('Page updated successfully!');
+    } catch (error) {
+      console.error('Failed to update page:', error);
+      alert('Failed to update page');
+    }
+  };
+
+  const handleDeletePage = async (pageId: string) => {
+    if (window.confirm('Are you sure you want to delete this page?')) {
+      try {
+        await ApiService.deletePage(pageId);
+        await loadContentPages();
+        alert('Page deleted successfully!');
+      } catch (error) {
+        console.error('Failed to delete page:', error);
+        alert('Failed to delete page');
+      }
+    }
+  };
+
+  const generateSlug = (title: string) => {
+    return title
+      .toLowerCase()
+      .replace(/[^a-z0-9а-яё]/g, '-')
+      .replace(/-+/g, '-')
+      .replace(/^-|-$/g, '');
   };
 
   // Show loading while checking auth
@@ -112,9 +217,7 @@ const Admin: React.FC = () => {
                 <option value="accidents">Accidents</option>
                 <option value="traffic_lights">Traffic Lights</option>
                 <option value="evacuations">Evacuations</option>
-              
               </select>
-              
             </div>
             
             <div>
@@ -160,9 +263,212 @@ const Admin: React.FC = () => {
       {activeTab === 'content' && (
         <div>
           <h2 className="text-xl font-bold mb-4">Content Management</h2>
-          <p className="text-gray-600">Content management functionality coming soon...</p>
+          
+          {/* Content Actions */}
+          <div className="flex gap-4 mb-6">
+            <button
+              onClick={() => setIsCreating(true)}
+              className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600 transition"
+            >
+              Create New Page
+            </button>
+            <button
+              onClick={loadContentPages}
+              className="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600 transition"
+            >
+              Refresh
+            </button>
+          </div>
+
+          {/* Page Creation Form */}
+          {isCreating && (
+            <PageEditor
+              page={null}
+              onSave={handleCreatePage}
+              onCancel={() => setIsCreating(false)}
+              generateSlug={generateSlug}
+            />
+          )}
+
+          {/* Page Editing Form */}
+          {editingPage && (
+            <PageEditor
+              page={editingPage}
+              onSave={(data) => handleUpdatePage(editingPage.id, data)}
+              onCancel={() => setEditingPage(null)}
+              generateSlug={generateSlug}
+            />
+          )}
+
+          {/* Pages List */}
+          {contentLoading ? (
+            <div className="flex justify-center items-center h-32">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
+            </div>
+          ) : (
+            <div className="grid gap-4">
+              {pages.map((page) => (
+                <div key={page.id} className="border rounded-lg p-4">
+                  <div className="flex justify-between items-start mb-2">
+                    <div>
+                      <h3 className="font-semibold text-lg">{page.title}</h3>
+                      <p className="text-sm text-gray-600">
+                        Slug: {page.slug} • Type: {page.page_type} • 
+                        Status: {page.is_published ? 'Published' : 'Draft'}
+                      </p>
+                      <p className="text-xs text-gray-500">
+                        Updated: {new Date(page.updated_at).toLocaleDateString()}
+                      </p>
+                    </div>
+                    <div className="flex gap-2">
+                      <button
+                        onClick={() => setEditingPage(page)}
+                        className="bg-blue-500 text-white px-3 py-1 rounded text-sm hover:bg-blue-600"
+                      >
+                        Edit
+                      </button>
+                      {user.role === 'admin' && (
+                        <button
+                          onClick={() => handleDeletePage(page.id)}
+                          className="bg-red-500 text-white px-3 py-1 rounded text-sm hover:bg-red-600"
+                        >
+                          Delete
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                  <div className="text-sm text-gray-700 line-clamp-2">
+                    {page.content.substring(0, 200)}...
+                  </div>
+                </div>
+              ))}
+              
+              {pages.length === 0 && (
+                <div className="text-center py-8 text-gray-500">
+                  No content pages found. Create your first page!
+                </div>
+              )}
+            </div>
+          )}
         </div>
       )}
+    </div>
+  );
+};
+
+// Page Editor Component
+interface PageEditorProps {
+  page: ContentPage | null;
+  onSave: (data: ContentPageCreate | Partial<ContentPage>) => void;
+  onCancel: () => void;
+  generateSlug: (title: string) => string;
+}
+
+const PageEditor: React.FC<PageEditorProps> = ({ page, onSave, onCancel, generateSlug }) => {
+  const [formData, setFormData] = useState({
+    title: page?.title || '',
+    slug: page?.slug || '',
+    content: page?.content || '',
+    page_type: page?.page_type || 'news',
+    is_published: page?.is_published || false
+  });
+
+  const handleTitleChange = (title: string) => {
+    setFormData(prev => ({
+      ...prev,
+      title,
+      slug: prev.slug || generateSlug(title)
+    }));
+  };
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    onSave(formData);
+  };
+
+  return (
+    <div className="bg-gray-50 p-6 rounded-lg mb-6">
+      <h3 className="text-lg font-semibold mb-4">
+        {page ? 'Edit Page' : 'Create New Page'}
+      </h3>
+      
+      <form onSubmit={handleSubmit} className="space-y-4">
+        <div>
+          <label className="block text-sm font-medium mb-1">Title</label>
+          <input
+            type="text"
+            value={formData.title}
+            onChange={(e) => handleTitleChange(e.target.value)}
+            className="border p-2 w-full rounded"
+            required
+          />
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium mb-1">Slug</label>
+          <input
+            type="text"
+            value={formData.slug}
+            onChange={(e) => setFormData(prev => ({ ...prev, slug: e.target.value }))}
+            className="border p-2 w-full rounded"
+            required
+          />
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium mb-1">Page Type</label>
+          <select
+            value={formData.page_type}
+            onChange={(e) => setFormData(prev => ({ ...prev, page_type: e.target.value }))}
+            className="border p-2 w-full rounded"
+          >
+            <option value="news">News</option>
+            <option value="about">About</option>
+            <option value="service">Service</option>
+            <option value="statistics">Statistics</option>
+          </select>
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium mb-1">Content</label>
+          <textarea
+            value={formData.content}
+            onChange={(e) => setFormData(prev => ({ ...prev, content: e.target.value }))}
+            rows={10}
+            className="border p-2 w-full rounded"
+            required
+          />
+        </div>
+
+        <div className="flex items-center">
+          <input
+            type="checkbox"
+            id="is_published"
+            checked={formData.is_published}
+            onChange={(e) => setFormData(prev => ({ ...prev, is_published: e.target.checked }))}
+            className="mr-2"
+          />
+          <label htmlFor="is_published" className="text-sm font-medium">
+            Publish immediately
+          </label>
+        </div>
+
+        <div className="flex gap-2">
+          <button
+            type="submit"
+            className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
+          >
+            {page ? 'Update Page' : 'Create Page'}
+          </button>
+          <button
+            type="button"
+            onClick={onCancel}
+            className="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600"
+          >
+            Cancel
+          </button>
+        </div>
+      </form>
     </div>
   );
 };

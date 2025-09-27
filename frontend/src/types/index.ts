@@ -137,6 +137,35 @@ export interface ContentPage {
   updated_at: string;
 }
 
+export interface ContentPage {
+  id: string;
+  title: string;
+  slug: string;
+  content: string;
+  is_published: boolean;
+  page_type: string;
+  author_id: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface ContentPageCreate {
+  title: string;
+  slug: string;
+  content: string;
+  is_published: boolean;
+  page_type: string;
+}
+
+export interface ContentPageUpdate {
+  title?: string;
+  slug?: string;
+  content?: string;
+  is_published?: boolean;
+  page_type?: string;
+}
+
+
 // API response types
 export interface LoginResponse {
   username: string;

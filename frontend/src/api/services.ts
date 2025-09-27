@@ -8,7 +8,9 @@ import {
   AnalyticsData, 
   DashboardAnalytics,  
   ContentPage,
-  ListResponse, 
+  ListResponse,
+  ContentPageCreate,  
+  ContentPageUpdate,  
 } from '../types';
 
 
@@ -140,13 +142,30 @@ export class ApiService {
     return response.blob();
   }
 
-  // Content
-  static async getNews() {
-    return this.request(api.getNews);
+
+// Content Management Methods
+  static async getContentPages(pageType?: string): Promise<ContentPage[]> {
+    const queryString = pageType ? `?page_type=${pageType}` : '';
+    return this.request<ContentPage[]>(`${api.getContentPages}${queryString}`);
   }
 
-  static async getContentPages(pageType?: string) {
-    const queryString = pageType ? `?page_type=${pageType}` : '';
-    return this.request(`${api.getContentPages}${queryString}`);
+  static async createPage(pageData: ContentPageCreate): Promise<ContentPage> {
+    return this.request<ContentPage>(api.getContentPages, {
+      method: 'POST',
+      body: JSON.stringify(pageData),
+    });
+  }
+
+  static async updatePage(pageId: string, updates: ContentPageUpdate): Promise<ContentPage> {
+    return this.request<ContentPage>(`${api.getContentPages}/${pageId}`, {
+      method: 'PUT', 
+      body: JSON.stringify(updates),
+    });
+  }
+
+  static async deletePage(pageId: string): Promise<void> {
+    return this.request(`${api.getContentPages}/${pageId}`, {
+      method: 'DELETE',
+    });
   }
 }
