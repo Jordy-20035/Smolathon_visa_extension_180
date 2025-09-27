@@ -18,68 +18,68 @@ from datetime import datetime
 
 router = APIRouter(prefix="/api/v1", tags=["import-export"])
 
+
 @router.post("/import/{model_type}", response_model=ImportResponse)
 async def import_data(
     model_type: str,
     file: UploadFile = File(...),
-    column_mapping: Optional[str] = Form(None),
+    column_mapping: Optional[str] = Form(None),   # <- accept as string
     sheet_name: Optional[str] = Query(None),
     db: Session = Depends(get_db),
     current_user: models.User = Depends(require_role("admin"))
 ):
-    """Import data from CSV or Excel file"""
-    
-    # Validate file type
+    # --- parse mapping ---
+    if column_mapping:
+        try:
+            mapping = json.loads(column_mapping)
+            if not isinstance(mapping, dict):
+                raise ValueError("column_mapping must be a JSON object (dict)")
+        except Exception as e:
+            raise HTTPException(status_code=400, detail=f"Invalid JSON in column_mapping: {e}")
+    else:
+        # fallback to default mapping or error
+        if model_type not in DEFAULT_COLUMN_MAPPINGS:
+            raise HTTPException(status_code=400, detail="No column_mapping provided and no default mapping found")
+        mapping = DEFAULT_COLUMN_MAPPINGS[model_type]
+
+    # --- check file ---
     if not file.filename:
         raise HTTPException(status_code=400, detail="No file provided")
-    
-    file_type = file.filename.split('.')[-1].lower()
-    if file_type not in ['csv', 'xlsx', 'xls']:
+    ext = file.filename.split(".")[-1].lower()
+    if ext not in ("csv", "xlsx", "xls"):
         raise HTTPException(status_code=400, detail="Unsupported file type")
-    
-    # Read file content
+
     content = await file.read()
-    if len(content) == 0:
+    if not content:
         raise HTTPException(status_code=400, detail="Empty file")
-    
-    # Determine importer based on model type
+
+    # --- select importer class (you already have these) ---
     if model_type == "fines":
         importer = FineImporter(db)
         import_func = importer.import_fines
-        default_mapping = DEFAULT_COLUMN_MAPPINGS["fines"]
     elif model_type == "accidents":
         importer = AccidentImporter(db)
         import_func = importer.import_accidents
-        default_mapping = DEFAULT_COLUMN_MAPPINGS["accidents"]
     elif model_type == "traffic_lights":
         importer = TrafficLightImporter(db)
         import_func = importer.import_traffic_lights
-        default_mapping = DEFAULT_COLUMN_MAPPINGS["traffic_lights"]
     else:
         raise HTTPException(status_code=400, detail=f"Unsupported model type: {model_type}")
-    
-    # FIX: Parse column mapping properly
-    if column_mapping:
-        try:
-            # Parse the JSON string into a dictionary
-            final_mapping = json.loads(column_mapping)
-        except json.JSONDecodeError as e:
-            raise HTTPException(status_code=400, detail=f"Invalid column mapping JSON: {str(e)}")
-    else:
-        final_mapping = default_mapping
-    
+
+    # --- execute import (expecting dict result matching ImportResponse) ---
     try:
-        # Perform import
         result = import_func(
             file_content=content,
-            file_type='excel' if file_type in ['xlsx', 'xls'] else 'csv',
-            column_mapping=final_mapping  # Now this is a dict, not a string
+            file_type='excel' if ext in ('xlsx','xls') else 'csv',
+            column_mapping=mapping,
+            sheet_name=sheet_name
         )
-        
         return ImportResponse(**result)
-        
+    except HTTPException:
+        raise
     except Exception as e:
-        raise HTTPException(status_code=400, detail=str(e))
+        raise HTTPException(status_code=500, detail=f"Import failed: {str(e)}")
+
 
 @router.get("/export/{export_type}")
 def export_data(

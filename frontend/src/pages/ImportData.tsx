@@ -2,25 +2,40 @@
 import React, { useState, useEffect } from 'react';
 import { ApiService } from '../api/services'; // Adjust import path as needed
 
+// Types for import/export responses
+interface ImportResponse {
+  total_processed: number;
+  successful: number;
+  failed: number;
+  errors: string[];
+}
+
+interface ColumnMappingResponse {
+  model_type: string;
+  available_mappings: Record<string, string>;
+  description: string;
+}
+
+
+
 const ImportData: React.FC = () => {
   const [file, setFile] = useState<File | null>(null);
   const [modelType, setModelType] = useState('fines');
   const [loading, setLoading] = useState(false);
-  const [result, setResult] = useState<any>(null);
-  const [columnMappings, setColumnMappings] = useState<any>({});
-  const [availableMappings, setAvailableMappings] = useState<any>({});
+  const [result, setResult] = useState<ImportResponse | null>(null);
+  const [columnMappings, setColumnMappings] = useState<Record<string, string>>({});
+  const [availableMappings, setAvailableMappings] = useState<Record<string, string>>({});
+
 
   // Load available column mappings when model type changes
   useEffect(() => {
     const loadMappings = async () => {
       try {
-        const data = await ApiService.getColumnMappings(modelType);
+        const data: ColumnMappingResponse = await ApiService.getColumnMappings(modelType);
         setAvailableMappings(data.available_mappings || {});
-        
-        // Set default mapping
         setColumnMappings(data.available_mappings || {});
       } catch (error) {
-        console.error('Failed to load mappings:', error);
+      console.error('Failed to load mappings:', error);
         // Fallback to default mappings if API fails
         const defaultMappings = {
           fines: {
@@ -63,15 +78,18 @@ const ImportData: React.FC = () => {
 
     setLoading(true);
     try {
-      const importResult = await ApiService.importData(modelType, file, columnMappings);
+      const importResult: ImportResponse = await ApiService.importData(modelType, file, columnMappings);
       setResult(importResult);
-      alert(`Import successful! Processed: ${importResult.total_processed}, Successful: ${importResult.successful}`);
+      alert(
+        `Import successful! Processed: ${importResult.total_processed}, Successful: ${importResult.successful}`
+      );
     } catch (error: any) {
       alert('Import failed: ' + error.message);
     } finally {
       setLoading(false);
     }
   };
+
 
   const handleMappingChange = (fileColumn: string, dbColumn: string) => {
     setColumnMappings((prev: any) => ({

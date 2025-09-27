@@ -11,6 +11,21 @@ import {
 } from '../types';
 
 
+// Response types
+export interface ImportResponse {
+  total_processed: number;
+  successful: number;
+  failed: number;
+  errors: string[];
+}
+
+export interface ColumnMappingResponse {
+  model_type: string;
+  available_mappings: Record<string, string>;
+  description: string;
+}
+
+
 export class ApiService {
   private static async request<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
       const token = localStorage.getItem('api_key');
