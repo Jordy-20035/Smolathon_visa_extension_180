@@ -150,6 +150,37 @@ class ColumnMapping(BaseModel):
     amount: Optional[str] = None
     issued_at: Optional[str] = None
     violation_code: Optional[str] = None
-    # Add other columns you need to map
+
+
+# Evacuation schemas
+class EvacuationBase(BaseModel):
+    location_id: uuid.UUID
+    evacuated_at: datetime
+    towing_vehicles_count: int
+    dispatches_count: int
+    evacuations_count: int
+    revenue: float
+    visibility: str = "private"
+
+class EvacuationCreate(EvacuationBase):
+    pass
+
+class EvacuationUpdate(BaseModel):
+    towing_vehicles_count: Optional[int] = None
+    dispatches_count: Optional[int] = None
+    evacuations_count: Optional[int] = None
+    revenue: Optional[float] = None
+    visibility: Optional[str] = None
+
+class Evacuation(EvacuationBase):
+    id: uuid.UUID
+    created_at: datetime
+    location: Optional[Location] = None
+    
+    model_config = ConfigDict(from_attributes=True)
+
+class EvacuationList(BaseModel):
+    items: List[Evacuation]
+    total: int
     
     model_config = ConfigDict(from_attributes=True)

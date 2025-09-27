@@ -11,6 +11,10 @@ from app.routers.auth import require_role
 from app.utils.importer import FineImporter, AccidentImporter, TrafficLightImporter
 from app.utils.exporter import PredefinedExports, DataExporter
 from app.schemas.import_export import ImportRequest, ImportResponse, FileType, DEFAULT_COLUMN_MAPPINGS
+import pandas as pd
+import uuid
+from datetime import datetime
+
 
 router = APIRouter(prefix="/api/v1", tags=["import-export"])
 
@@ -168,3 +172,156 @@ def get_column_mappings(
         }
     else:
         raise HTTPException(status_code=404, detail=f"No mappings found for {model_type}")
+    
+
+# Simple import for evacuation data
+@router.post("/evacuations")
+async def import_evacuations(
+    file: UploadFile = File(...),
+    db: Session = Depends(get_db)
+):
+    """Import evacuation data from Excel file"""
+    if not file.filename.endswith(('.xlsx', '.xls')):
+        raise HTTPException(status_code=400, detail="Only Excel files are supported")
+    
+    try:
+        # Read Excel file
+        df = pd.read_excel(await file.read())
+        
+        # Map Russian column names to English
+        column_mapping = {
+            'Дата': 'evacuated_at',
+            'Количество эвакуаторов на линии': 'towing_vehicles_count', 
+            'Количество выездов': 'dispatches_count',
+            'Количество эвакуаций': 'evacuations_count',
+            'Сумма поступлений по штрафстоянке': 'revenue'
+        }
+        
+        # Rename columns
+        df = df.rename(columns=column_mapping)
+        
+        # Filter out header rows and empty data
+        df = df[df['evacuated_at'].notna()]
+        df = df[df['evacuated_at'] != 'Дата']  # Remove header row
+        
+        # Convert date column
+        df['evacuated_at'] = pd.to_datetime(df['evacuated_at'])
+        
+        imported_count = 0
+        errors = []
+        
+        for index, row in df.iterrows():
+            try:
+                # Create a default location or use an existing one
+                # For simplicity, we'll create a generic location
+                location = models.Location(
+                    address=f"Эвакуация {row['evacuated_at'].strftime('%Y-%m-%d')}",
+                    district="Смоленск"
+                )
+                db.add(location)
+                db.flush()  # Get the location ID
+                
+                # Create evacuation record
+                evacuation = models.Evacuation(
+                    location_id=location.id,
+                    evacuated_at=row['evacuated_at'],
+                    towing_vehicles_count=int(row['towing_vehicles_count']),
+                    dispatches_count=int(row['dispatches_count']),
+                    evacuations_count=int(row['evacuations_count']),
+                    revenue=float(row['revenue'])
+                )
+                
+                db.add(evacuation)
+                imported_count += 1
+                
+            except Exception as e:
+                errors.append(f"Row {index+1}: {str(e)}")
+        
+        db.commit()
+        
+        return {
+            "message": f"Successfully imported {imported_count} records",
+            "errors": errors,
+            "total_imported": imported_count
+        }
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Import failed: {str(e)}")
+
+# Export evacuation data
+@router.get("/evacuations/export")
+async def export_evacuations(
+    start_date: str = None,
+    end_date: str = None,
+    db: Session = Depends(get_db)
+):
+    """Export evacuation data to Excel"""
+    try:
+        # Build query
+        query = db.query(models.Evacuation)
+        
+        if start_date:
+            query = query.filter(models.Evacuation.evacuated_at >= datetime.fromisoformat(start_date))
+        if end_date:
+            query = query.filter(models.Evacuation.evacuated_at <= datetime.fromisoformat(end_date))
+        
+        evacuations = query.all()
+        
+        # Prepare data for Excel
+        data = []
+        for evac in evacuations:
+            data.append({
+                'Дата': evac.evacuated_at,
+                'Количество эвакуаторов на линии': evac.towing_vehicles_count,
+                'Количество выездов': evac.dispatches_count,
+                'Количество эвакуаций': evac.evacuations_count,
+                'Сумма поступлений по штрафстоянке': evac.revenue
+            })
+        
+        # Create DataFrame
+        df = pd.DataFrame(data)
+        
+        # Create Excel file in memory
+        output = io.BytesIO()
+        with pd.ExcelWriter(output, engine='openpyxl') as writer:
+            df.to_excel(writer, sheet_name='Эвакуации', index=False)
+        
+        output.seek(0)
+        
+        # Return as downloadable file
+        filename = f"evacuations_export_{datetime.now().strftime('%Y%m%d_%H%M%S')}.xlsx"
+        
+        return StreamingResponse(
+            output,
+            media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            headers={"Content-Disposition": f"attachment; filename={filename}"}
+        )
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Export failed: {str(e)}")
+
+# Template download
+@router.get("/evacuations/template")
+async def download_template():
+    """Download import template"""
+    template_data = {
+        'Дата': ['2024-01-01 00:00:00', '2024-01-02 00:00:00'],
+        'Количество эвакуаторов на линии': [1, 2],
+        'Количество выездов': [3, 5], 
+        'Количество эвакуаций': [2, 4],
+        'Сумма поступлений по штрафстоянке': [10000, 20000]
+    }
+    
+    df = pd.DataFrame(template_data)
+    
+    output = io.BytesIO()
+    with pd.ExcelWriter(output, engine='openpyxl') as writer:
+        df.to_excel(writer, sheet_name='Шаблон', index=False)
+    
+    output.seek(0)
+    
+    return StreamingResponse(
+        output,
+        media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        headers={"Content-Disposition": "attachment; filename=import_template.xlsx"}
+    )

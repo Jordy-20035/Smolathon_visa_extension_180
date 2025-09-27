@@ -27,6 +27,8 @@ class Location(Base):
     district = Column(String(100))
     created_at = Column(DateTime(timezone=True), server_default=func.now())
 
+    evacuations = relationship("Evacuation", back_populates="location")
+
 class Vehicle(Base):
     __tablename__ = "vehicles"
     
@@ -103,3 +105,21 @@ class ContentPage(Base):
     
     # Relationship
     author = relationship("User", back_populates="content_pages")
+
+
+# Add to your models.py
+
+class Evacuation(Base):
+    __tablename__ = "evacuations"
+    
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    location_id = Column(UUID(as_uuid=True), ForeignKey('locations.id'), nullable=False)
+    evacuated_at = Column(DateTime, nullable=False)
+    towing_vehicles_count = Column(Integer, default=0)
+    dispatches_count = Column(Integer, default=0)
+    evacuations_count = Column(Integer, default=0)
+    revenue = Column(Float, default=0.0)
+    visibility = Column(String, default="private")
+    created_at = Column(DateTime, default=datetime.utcnow)
+    
+    location = relationship("Location", back_populates="evacuations")
