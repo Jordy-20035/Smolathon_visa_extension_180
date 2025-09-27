@@ -165,10 +165,6 @@ uvicorn main:app --port 8000
 # Укажите API_URL на ваш backend
 ```
 
-### 6. Доступ к приложению
-- **Публичный сайт:** http://localhost:3000
-- **API документация:** http://localhost:8000/docs
-- **Админ-панель:** http://localhost:3000/admin (требуется авторизация)
 
 ---
 
