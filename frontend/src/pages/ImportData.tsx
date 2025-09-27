@@ -16,8 +16,6 @@ interface ColumnMappingResponse {
   description: string;
 }
 
-
-
 const ImportData: React.FC = () => {
   const [file, setFile] = useState<File | null>(null);
   const [modelType, setModelType] = useState('fines');
@@ -58,7 +56,14 @@ const ImportData: React.FC = () => {
             "Статус": "status",
             "Дата установки": "install_date", 
             "Адрес": "address"
-          }
+          },
+          evacuations: {
+            "Дата": "evacuated_at",
+            "Количество эвакуаторов на линии": "towing_vehicles_count",
+            "Количество выездов": "dispatches_count", 
+            "Количество эвакуаций": "evacuations_count",
+            "Сумма поступлений по  штрафстоянке": "revenue"
+}
         };
         
         setAvailableMappings(defaultMappings[modelType as keyof typeof defaultMappings] || {});

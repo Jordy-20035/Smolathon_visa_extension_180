@@ -111,7 +111,10 @@ const Admin: React.FC = () => {
                 <option value="fines">Fines</option>
                 <option value="accidents">Accidents</option>
                 <option value="traffic_lights">Traffic Lights</option>
+                <option value="evacuations">Evacuations</option>
+              
               </select>
+              
             </div>
             
             <div>

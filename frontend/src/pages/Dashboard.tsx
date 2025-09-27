@@ -53,12 +53,15 @@ const Dashboard: React.FC = () => {
   const getFinesAmount = () => analytics?.fines?.total_amount || 0;
   const getAccidentsCount = () => analytics?.accidents?.total_count || 0;
   const getTrafficLightsCount = () => analytics?.traffic_lights?.total_count || 0;
+  const getEvacuationsCount = () => analytics?.evacuations?.total_count || 0;
+  const getEvacuationsRevenue = () => analytics?.evacuations?.total_revenue || 0;
+  const getEvacuationsDispatches = () => analytics?.evacuations?.total_dispatches || 0;
 
   // Role-based content rendering
   const renderPublicData = () => (
     <div className="p-6">
       <h1 className="text-2xl font-bold mb-6">Public Traffic Statistics</h1>
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <div className="bg-white p-4 rounded shadow border">
           <h3 className="font-semibold text-lg mb-2">Traffic Incidents</h3>
           <p className="text-2xl font-bold text-blue-600">{getAccidentsCount()}</p>
@@ -69,6 +72,12 @@ const Dashboard: React.FC = () => {
           <h3 className="font-semibold text-lg mb-2">Traffic Lights</h3>
           <p className="text-2xl font-bold text-green-600">{getTrafficLightsCount()}</p>
           <p className="text-sm text-gray-600">Active signals</p>
+        </div>
+        
+        <div className="bg-white p-4 rounded shadow border">
+          <h3 className="font-semibold text-lg mb-2">Vehicle Relocations</h3>
+          <p className="text-2xl font-bold text-orange-600">{getEvacuationsCount()}</p>
+          <p className="text-sm text-gray-600">Vehicles relocated</p>
         </div>
       </div>
       <p className="mt-4 text-gray-600 text-sm">
@@ -82,7 +91,7 @@ const Dashboard: React.FC = () => {
       <h1 className="text-2xl font-bold mb-6">
         {userRole === 'admin' ? 'Administrative Dashboard' : 'Editor Dashboard'}
       </h1>
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
         <div className="bg-white p-4 rounded shadow border">
           <h3 className="font-semibold text-lg mb-2">Fines</h3>
           <p className="text-2xl font-bold text-blue-600">{getFinesCount()}</p>
@@ -101,6 +110,17 @@ const Dashboard: React.FC = () => {
           <h3 className="font-semibold text-lg mb-2">Traffic Lights</h3>
           <p className="text-2xl font-bold text-green-600">{getTrafficLightsCount()}</p>
           <p className="text-sm text-gray-600">Total installed</p>
+        </div>
+        
+        <div className="bg-white p-4 rounded shadow border">
+          <h3 className="font-semibold text-lg mb-2">Evacuations</h3>
+          <p className="text-2xl font-bold text-purple-600">{getEvacuationsCount()}</p>
+          <p className="text-sm text-gray-600">
+            Revenue: ${getEvacuationsRevenue().toLocaleString()}
+          </p>
+          <p className="text-sm text-gray-600">
+            Dispatches: {getEvacuationsDispatches()}
+          </p>
         </div>
       </div>
     </div>

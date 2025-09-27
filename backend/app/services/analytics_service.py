@@ -129,6 +129,110 @@ class AnalyticsService:
             "by_status": by_status,
             "by_district": by_district
         }
+    # Add to backend/app/services/analytics_service.py
+
+    def get_evacuations_analytics(self, start_date: Optional[date] = None, end_date: Optional[date] = None):
+        """Get evacuation analytics"""
+        query = self.db.query(models.Evacuation)
+        
+        # Apply date filters if provided - use evacuated_at instead of date
+        if start_date:
+            query = query.filter(models.Evacuation.evacuated_at >= start_date)
+        if end_date:
+            query = query.filter(models.Evacuation.evacuated_at <= end_date)
+        
+        evacuations = query.all()
+        
+        if not evacuations:
+            return {
+                "total_count": 0,
+                "total_revenue": 0,
+                "total_dispatches": 0,
+                "avg_tow_trucks": 0,
+                "time_series": [],
+                "monthly_comparison": {
+                    "current_month": 0,
+                    "previous_month": 0,
+                    "change_percentage": 0
+                }
+            }
+        
+        # Use the correct field names from your model
+        total_evacuations = sum(e.evacuations_count for e in evacuations)  # FIXED: evacuations_count
+        total_revenue = sum(e.revenue for e in evacuations)  # FIXED: revenue
+        total_dispatches = sum(e.dispatches_count for e in evacuations)  # FIXED: dispatches_count
+        avg_tow_trucks = sum(e.towing_vehicles_count for e in evacuations) / len(evacuations)  # FIXED: towing_vehicles_count
+        
+        # Time series data (group by month)
+        time_series = self._get_evacuations_time_series(evacuations)
+        
+        # Monthly comparison
+        monthly_comparison = self._get_evacuations_monthly_comparison(evacuations)
+        
+        return {
+            "total_count": total_evacuations,
+            "total_revenue": total_revenue,
+            "total_dispatches": total_dispatches,
+            "avg_tow_trucks": round(avg_tow_trucks, 1),
+            "time_series": time_series,
+            "monthly_comparison": monthly_comparison
+        }
+
+    def _get_evacuations_time_series(self, evacuations):
+        """Convert evacuations to time series data"""
+        from collections import defaultdict
+        from datetime import datetime
+        
+        monthly_data = defaultdict(lambda: {"evacuations": 0, "revenue": 0, "dispatches": 0})
+        
+        for evacuation in evacuations:
+            if evacuation.evacuated_at:  # FIXED: use evacuated_at
+                month_key = evacuation.evacuated_at.strftime("%Y-%m")
+                monthly_data[month_key]["evacuations"] += evacuation.evacuations_count  # FIXED
+                monthly_data[month_key]["revenue"] += evacuation.revenue  # FIXED
+                monthly_data[month_key]["dispatches"] += evacuation.dispatches_count  # FIXED
+        
+        time_series = []
+        for month, data in sorted(monthly_data.items()):
+            time_series.append({
+                "date": f"{month}-01",
+                "count": data["evacuations"],
+                "amount": data["revenue"],
+                "dispatches": data["dispatches"]
+            })
+        
+        return time_series
+
+    def _get_evacuations_monthly_comparison(self, evacuations):
+        """Compare current month with previous month"""
+        from datetime import datetime, timedelta
+        from collections import defaultdict
+        
+        monthly_totals = defaultdict(int)
+        
+        for evacuation in evacuations:
+            if evacuation.evacuated_at:  # FIXED: use evacuated_at
+                month_key = evacuation.evacuated_at.strftime("%Y-%m")
+                monthly_totals[month_key] += evacuation.evacuations_count  # FIXED: evacuations_count
+        
+        # Get current and previous month
+        current_date = datetime.now()
+        current_month = current_date.strftime("%Y-%m")
+        previous_month = (current_date.replace(day=1) - timedelta(days=1)).strftime("%Y-%m")
+        
+        current_count = monthly_totals.get(current_month, 0)
+        previous_count = monthly_totals.get(previous_month, 0)
+        
+        if previous_count > 0:
+            change_percentage = ((current_count - previous_count) / previous_count) * 100
+        else:
+            change_percentage = 100 if current_count > 0 else 0
+        
+        return {
+            "current_month": current_count,
+            "previous_month": previous_count,
+            "change_percentage": round(change_percentage, 1)
+        }
 
     def get_comparison_analytics(self, period: str = "month") -> Dict:
         """Compare current period with previous period"""

@@ -8,10 +8,9 @@ import {
   AnalyticsData, 
   DashboardAnalytics,  
   ContentPage,
-  ListResponse 
+  ListResponse, 
 } from '../types';
 
-const API_URL = "http://localhost:8000"; 
 
 
 export class ApiService {
@@ -89,28 +88,40 @@ export class ApiService {
     return this.request(`${api.getTrafficLightsAnalytics}`);
   }
 
+// Add to services.ts
+  static async getEvacuationsAnalytics(params?: { start_date?: string; end_date?: string }): Promise<any> {
+    const queryString = params ? new URLSearchParams(params).toString() : '';
+    return this.request(`${api.getEvacuationsAnalytics}?${queryString}`);
+  }  
 
-  // Import/Export
-  async getColumnMappings(modelType: string) {
-    const res = await axios.get(`${API_URL}/files/mappings/${modelType}`);
+
+  // Import/Export 
+  static async getColumnMappings(modelType: string) {
+    const res = await axios.get(api.getColumnMappings(modelType));
     return res.data;
   }
 
-  async importData(modelType: string, file: File, columnMappings: Record<string, string>) {
+  static async importData(modelType: string, file: File, columnMappings: Record<string, string>) {
     const formData = new FormData();
     formData.append("file", file);
     formData.append("column_mappings", JSON.stringify(columnMappings));
-    const res = await axios.post(`${API_URL}/files/import/${modelType}`, formData, {
-      headers: { "Content-Type": "multipart/form-data" },
+    
+    const token = localStorage.getItem('api_key');
+    const headers: Record<string, string> = {
+      "Content-Type": "multipart/form-data",
+      ...(token && { 'api-key': token }),
+    };
+    
+    const res = await axios.post(api.importData(modelType), formData, {
+      headers,
     });
     return res.data;
   }
 
-  // Add export method
+  // Add export method - UPDATED
   static async exportData(exportType: string, format: string = 'csv') {
-    // For binary file downloads, we need to handle the response differently
     const token = localStorage.getItem('api_key');
-    const response = await fetch(`${api.exportData}/${exportType}?format=${format}`, {
+    const response = await fetch(`${api.exportData(exportType)}?format=${format}`, {
       headers: {
         'api-key': token || '',
       },
@@ -120,7 +131,7 @@ export class ApiService {
       throw new Error(`Export failed: ${response.statusText}`);
     }
     
-    return response.blob(); // Return blob for file download
+    return response.blob();
   }
 
   // Content

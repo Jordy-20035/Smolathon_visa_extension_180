@@ -107,8 +107,6 @@ class ContentPage(Base):
     author = relationship("User", back_populates="content_pages")
 
 
-# Add to your models.py
-
 class Evacuation(Base):
     __tablename__ = "evacuations"
     

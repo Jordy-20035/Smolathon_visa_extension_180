@@ -46,5 +46,12 @@ DEFAULT_COLUMN_MAPPINGS = {
         "Статус": "status",
         "Дата установки": "install_date", 
         "Адрес": "address"
+    },
+    "evacuations": {
+        "Дата": "evacuated_at",
+        "Количество эвакуаторов на линии": "towing_vehicles_count",
+        "Количество выездов": "dispatches_count", 
+        "Количество эвакуаций": "evacuations_count",
+        "Сумма поступлений по  штрафстоянке": "revenue"  
     }
 }

@@ -60,6 +60,20 @@ export interface TrafficLight {
   location?: Location;
 }
 
+// ADD EVACUATION TYPE
+export interface Evacuation {
+  id: string;
+  location_id: string;
+  evacuated_at: string;
+  towing_vehicles_count: number;
+  dispatches_count: number;
+  evacuations_count: number;
+  revenue: number;
+  visibility: string;
+  created_at: string;
+  location?: Location;
+}
+
 // Analytics types
 export interface TimeSeriesPoint {
   date: string;
@@ -74,6 +88,19 @@ export interface AnalyticsData {
   by_district: Record<string, number>;
   by_severity?: Record<string, number>;
   by_type?: Record<string, number>;
+}
+
+export interface EvacuationAnalytics {
+  total_count: number;
+  total_revenue: number;
+  total_dispatches: number;
+  avg_tow_trucks: number;
+  time_series: TimeSeriesPoint[];
+  monthly_comparison: {
+    current_month: number;
+    previous_month: number;
+    change_percentage: number;
+  };
 }
 
 export interface DashboardAnalytics {
@@ -94,6 +121,7 @@ export interface DashboardAnalytics {
     by_status: Record<string, number>;
     by_district: Record<string, number>;
   };
+  evacuations?: EvacuationAnalytics;
 }
 
 // Content types
@@ -122,4 +150,19 @@ export interface ListResponse<T> {
   page?: number;
   per_page?: number;
   pages?: number;
+}
+
+// ADD IMPORT/EXPORT TYPES
+export interface ImportResponse {
+  total_processed: number;
+  successful: number;
+  failed: number;
+  errors: string[];
+}
+
+export interface ExportRequest {
+  format: 'csv' | 'excel';
+  query?: string;
+  model_type?: string;
+  filters?: Record<string, string>;
 }

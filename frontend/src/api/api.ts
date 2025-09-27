@@ -16,20 +16,19 @@ export const api = {
   getTrafficLightsAnalytics: `${API_BASE_URL}/analytics/traffic-lights`,
   getDashboardAnalytics: `${API_BASE_URL}/analytics/dashboard`,
   getPublicDashboardAnalytics: `${API_BASE_URL}/analytics/public/dashboard`,
+  getEvacuationsAnalytics: `${API_BASE_URL}/analytics/evacuations`, // This line is crucial
 
-  
+
   // Content
   getContentPages: `${API_BASE_URL}/content/pages`,
   getNews: `${API_BASE_URL}/content/news`,
 
-
-    // Import/Export
-  importData: `${API_BASE_URL}/api/v1/import`,
-  exportData: `${API_BASE_URL}/api/v1/export`,
-
-
-  // Add specific endpoints for your functionality
+  // Import/Export - FIXED: Use consistent endpoints
+  importData: (modelType: string) => `${API_BASE_URL}/api/v1/import/${modelType}`,
   getColumnMappings: (modelType: string) => `${API_BASE_URL}/api/v1/import/mappings/${modelType}`,
+  exportData: (exportType: string) => `${API_BASE_URL}/api/v1/export/${exportType}`,
+  
+  // Specific endpoints
   exportEvacuations: `${API_BASE_URL}/api/v1/evacuations/export`,
   downloadTemplate: `${API_BASE_URL}/api/v1/evacuations/template`,
 };

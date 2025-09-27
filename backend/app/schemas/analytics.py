@@ -25,3 +25,15 @@ class ComparisonResponse(BaseModel):
     current_period: AnalyticsResponse
     previous_period: AnalyticsResponse
     change_percentage: float
+
+# Add to schemas/analytics.py
+class EvacuationAnalyticsResponse(BaseModel):
+    total_count: int
+    total_revenue: float
+    total_dispatches: int
+    avg_tow_trucks: float
+    time_series: List[TimeSeriesPoint]
+    monthly_comparison: Dict[str, float]
+    
+    class Config:
+        from_attributes = True
