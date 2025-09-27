@@ -450,7 +450,7 @@ const getStatsSummary = (): StatsSummary => {
           setSelectedDistrict={setSelectedDistrict}
         />
 
-       // In your JSX, update the StatCard components with safe access:
+
 
 {/* Stats Overview */}
 <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
