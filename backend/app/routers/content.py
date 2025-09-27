@@ -9,7 +9,7 @@ from app.routers.auth import require_role
 from app.services.content_service import ContentService
 from app.schemas.content import ContentPage, ContentPageCreate, ContentPageUpdate, ContentPageList
 
-router = APIRouter(prefix="/api/v1/content", tags=["content"])
+router = APIRouter(prefix="/content", tags=["content"])
 
 # Public endpoints (no authentication required)
 @router.get("/pages", response_model=List[ContentPage])

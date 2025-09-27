@@ -2,6 +2,15 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.config import settings
 from app.routers import auth, data, analytics, import_export, content
+from starlette.exceptions import HTTPException as StarletteHTTPException
+from fastapi.responses import JSONResponse
+from app.database import engine, Base
+from app.models import User, Location, Vehicle, Fine, Accident, TrafficLight, ContentPage
+
+
+# Create tables on startup
+Base.metadata.create_all(bind=engine)
+
 
 app = FastAPI(
     title=settings.PROJECT_NAME,
@@ -15,11 +24,19 @@ app = FastAPI(
 # CORS middleware
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=settings.BACKEND_CORS_ORIGINS,
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# Custom exception handler for 404
+@app.exception_handler(StarletteHTTPException)
+async def http_exception_handler(request, exc):
+    return JSONResponse(
+        status_code=exc.status_code,
+        content={"detail": exc.detail}
+    )
 
 # Include routers
 app.include_router(auth.router)
@@ -29,23 +46,9 @@ app.include_router(analytics.router)
 app.include_router(content.router)
 
 @app.get("/")
-def root():
-    return {
-        "message": "ЦОДД Смоленской области API", 
-        "version": settings.VERSION,
-        "docs": "/docs",
-        "health": "/health"
-    }
+def read_root():
+    return {"message": "Traffic Management API is running"}
 
 @app.get("/health")
 def health_check():
     return {"status": "healthy", "database": "connected"}
-
-# Custom exception handlers
-@app.exception_handler(404)
-async def not_found_exception_handler(request, exc):
-    return {"detail": "Resource not found"}
-
-@app.exception_handler(500)
-async def internal_exception_handler(request, exc):
-    return {"detail": "Internal server error"}

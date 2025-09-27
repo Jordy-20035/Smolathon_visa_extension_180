@@ -7,7 +7,7 @@ from app.database import get_db
 from app import models, core_schemas, crud
 from app.routers.auth import get_current_user, require_role
 
-router = APIRouter(prefix="/api/v1", tags=["data"])
+router = APIRouter(prefix="/data", tags=["data"])
 
 # Fines endpoints
 @router.get("/fines/", response_model=core_schemas.FineList)

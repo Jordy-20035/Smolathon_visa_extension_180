@@ -12,8 +12,10 @@ class User(Base):
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     username = Column(String(100), unique=True, nullable=False)
     api_key = Column(String(100), unique=True, nullable=False)
-    role = Column(String(20), nullable=False)  # citizen, redactor, admin
+    role = Column(String(20), nullable=False)  # citizen, editor, admin
     created_at = Column(DateTime(timezone=True), server_default=func.now())
+
+    content_pages = relationship("ContentPage", back_populates="author")
 
 class Location(Base):
     __tablename__ = "locations"
@@ -96,8 +98,8 @@ class ContentPage(Base):
     page_type = Column(String(20), nullable=False)  # news, service, about, statistics
     
     author_id = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=False)
-    created_at = Column(DateTime, default=datetime.utcnow)
-    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())  # Changed to func.now()
+    updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())  # Fixed
     
     # Relationship
     author = relationship("User", back_populates="content_pages")
