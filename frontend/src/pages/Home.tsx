@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { ChevronRight, Phone, Mail, MapPin, Clock, Users, Shield, Heart, Zap, ArrowRight, Calendar, Star, CheckCircle } from "lucide-react";
-import logo from "../assets/logo.png"; // adjust path if needed
+import logo from "../assets/logo.jpg"; // adjust path if needed
 
 
 // Enhanced data with more engaging content
