@@ -1,12 +1,16 @@
 import React, { useEffect, useState } from 'react';
 import { ApiService } from '../api/services';
 import { DashboardAnalytics } from '../types';
+import { useNavigate } from 'react-router-dom';
+
 
 const Dashboard: React.FC = () => {
   const [analytics, setAnalytics] = useState<DashboardAnalytics | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [userRole, setUserRole] = useState<string>('citizen');
+  const navigate = useNavigate();
+
 
   useEffect(() => {
     // Get user role from localStorage
@@ -15,10 +19,22 @@ const Dashboard: React.FC = () => {
       try {
         const user = JSON.parse(userData);
         setUserRole(user.role);
+
+        // RESTRICT ACCESS: Only admins can see dashboard
+        if (user.role !== 'admin') {
+          navigate('/'); // Redirect editors and citizens to home
+          return;
+        }
       } catch (e) {
         console.error('Error parsing user data:', e);
+        navigate('/login');
+        return;
       }
+    } else {
+      navigate('/login');
+      return;
     }
+
 
     const loadDashboard = async () => {
       try {
@@ -26,7 +42,7 @@ const Dashboard: React.FC = () => {
         
         let dashboardData: DashboardAnalytics;
         
-        if (userRole === 'admin' || userRole === 'redactor') {
+        if (userRole === 'admin') {
           // Load full dashboard for admin/redactor
           dashboardData = await ApiService.getDashboardAnalytics();
         } else {

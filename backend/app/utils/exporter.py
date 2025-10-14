@@ -78,8 +78,9 @@ class PredefinedExports:
     def __init__(self, db: Session):
         self.exporter = DataExporter(db)
     
-    def export_public_fines(self, format: str = 'csv') -> bytes:
-        """Export public fines data"""
+
+    def export_fines(self, format: str = 'csv') -> bytes:
+        """Export fines data"""
         query = """
         SELECT 
             f.issued_at as "Дата нарушения",
@@ -94,10 +95,10 @@ class PredefinedExports:
         WHERE f.visibility = 'public'
         ORDER BY f.issued_at DESC
         """
-        return self._export_query(query, format, "Штрафы_публичные")
-    
-    def export_accidents_stats(self, format: str = 'csv') -> bytes:
-        """Export accident statistics"""
+        return self._export_query(query, format, "Штрафы")
+
+    def export_accidents(self, format: str = 'csv') -> bytes:
+        """Export accident data"""
         query = """
         SELECT 
             a.accident_type as "Тип ДТП",
@@ -111,8 +112,8 @@ class PredefinedExports:
         WHERE a.visibility = 'public'
         ORDER BY a.occurred_at DESC
         """
-        return self._export_query(query, format, "Статистика_ДТП")
-    
+        return self._export_query(query, format, "ДТП")
+
     def export_traffic_lights(self, format: str = 'csv') -> bytes:
         """Export traffic lights data"""
         query = """
@@ -127,7 +128,25 @@ class PredefinedExports:
         JOIN locations l ON tl.location_id = l.id
         ORDER BY tl.install_date DESC
         """
-        return self._export_query(query, format, "Реестр_светофоров")
+        return self._export_query(query, format, "Светофоры")
+
+    def export_evacuations(self, format: str = 'csv') -> bytes:
+        """Export evacuations data"""
+        query = """
+        SELECT 
+            e.evacuated_at as "Дата эвакуации",
+            e.towing_vehicles_count as "Количество эвакуаторов", 
+            e.dispatches_count as "Количество выездов",
+            e.evacuations_count as "Количество эвакуаций",
+            e.revenue as "Поступления",
+            l.address as "Место",
+            l.district as "Район"
+        FROM evacuations e
+        JOIN locations l ON e.location_id = l.id
+        WHERE e.visibility = 'public'
+        ORDER BY e.evacuated_at DESC
+        """
+        return self._export_query(query, format, "Эвакуации")
     
     def _export_query(self, query: str, format: str, filename: str) -> bytes:
         """Helper method to export query results"""

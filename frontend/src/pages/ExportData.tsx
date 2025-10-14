@@ -1,9 +1,9 @@
-// src/pages/ExportData.tsx - Updated version
+// src/pages/ExportData.tsx - FIXED version
 import React, { useState } from 'react';
-import { ApiService } from '../api/services'; // Adjust import path as needed
+import { ApiService } from '../api/services';
 
 const ExportData: React.FC = () => {
-  const [exportType, setExportType] = useState('public_fines');
+  const [exportType, setExportType] = useState('fines');
   const [format, setFormat] = useState('csv');
   const [loading, setLoading] = useState(false);
 
@@ -12,11 +12,14 @@ const ExportData: React.FC = () => {
     try {
       const blob = await ApiService.exportData(exportType, format);
       
+      // Create proper file extension
+      const fileExtension = format === 'excel' ? 'xlsx' : 'csv';
+      
       // Trigger download
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `${exportType}_export.${format}`;
+      a.download = `${exportType}_export.${fileExtension}`;
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
@@ -42,8 +45,8 @@ const ExportData: React.FC = () => {
             onChange={(e) => setExportType(e.target.value)}
             className="border p-2 w-full rounded"
           >
-            <option value="public_fines">Public Fines</option>
-            <option value="accidents">Accidents Statistics</option>
+            <option value="fines">Fines</option>
+            <option value="accidents">Accidents</option>
             <option value="traffic_lights">Traffic Lights</option>
             <option value="evacuations">Evacuations</option>
           </select>

@@ -40,6 +40,14 @@ export class ApiService {
       return response.json() as T;
   }
 
+  static async getAdminContentPages(page: number = 1, perPage: number = 20) {
+    return this.request(`${api.adminContentPages}?page=${page}&per_page=${perPage}`);
+  }
+
+  static async getContentPageById(id: string) {
+    return this.request(api.contentPage(id));
+  }
+
   // Authentication
   static async login(username: string): Promise<LoginResponse> {
     return this.request<LoginResponse>(api.login, {

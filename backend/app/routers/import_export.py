@@ -96,15 +96,18 @@ def export_data(
     exporter = PredefinedExports(db)
     
     try:
-        if export_type == "public_fines":
-            data = exporter.export_public_fines(format.value)
-            filename = "public_fines"
+        if export_type == "fines":
+            data = exporter.export_fines(format.value)
+            filename = "fines"
         elif export_type == "accidents":
-            data = exporter.export_accidents_stats(format.value)
-            filename = "accidents_statistics"
+            data = exporter.export_accidents(format.value)
+            filename = "accidents"
         elif export_type == "traffic_lights":
             data = exporter.export_traffic_lights(format.value)
             filename = "traffic_lights"
+        elif export_type == "evacuations":
+            data = exporter.export_evacuations(format.value)
+            filename = "evacuations"
         else:
             raise HTTPException(status_code=400, detail=f"Unsupported export type: {export_type}")
         
@@ -127,37 +130,7 @@ def export_data(
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
 
-@router.post("/export/custom")
-def export_custom_data(
-    query: str,
-    format: FileType = FileType.CSV,
-    db: Session = Depends(get_db),
-    current_user: models.User = Depends(require_role("admin"))
-):
-    """Export custom SQL query results"""
-    
-    exporter = DataExporter(db)
-    
-    try:
-        if format == FileType.CSV:
-            data = exporter.export_to_csv(query)
-            media_type = "text/csv"
-            extension = "csv"
-        else:
-            data = exporter.export_to_excel(query)
-            media_type = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-            extension = "xlsx"
-        
-        return StreamingResponse(
-            io.BytesIO(data),
-            media_type=media_type,
-            headers={
-                "Content-Disposition": f"attachment; filename=custom_export.{extension}"
-            }
-        )
-        
-    except Exception as e:
-        raise HTTPException(status_code=400, detail=f"Query execution failed: {str(e)}")
+
 
 # Additional endpoint to get available column mappings
 @router.get("/import/mappings/{model_type}")

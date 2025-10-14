@@ -23,6 +23,10 @@ export const api = {
   getContentPages: `${API_BASE_URL}/content/pages`,
   getNews: `${API_BASE_URL}/content/news`,
 
+  // Add these to your api object in api.ts:
+  adminContentPages: `${API_BASE_URL}/content/admin/pages`,
+  contentPage: (id: string) => `${API_BASE_URL}/content/pages/${id}`,
+
   // Import/Export - FIXED: Use consistent endpoints
   importData: (modelType: string) => `${API_BASE_URL}/api/v1/import/${modelType}`,
   getColumnMappings: (modelType: string) => `${API_BASE_URL}/api/v1/import/mappings/${modelType}`,

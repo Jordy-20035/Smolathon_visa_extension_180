@@ -32,6 +32,34 @@ const Admin: React.FC = () => {
   const [result, setResult] = useState<any>(null);
   const navigate = useNavigate();
 
+  // Export handler
+const [exportFormat, setExportFormat] = useState('csv');
+
+const handleExport = async () => {
+  setLoading(true);
+  try {
+    const blob = await ApiService.exportData(modelType, exportFormat);
+    
+    // Create download link
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${modelType}_export.${exportFormat === 'excel' ? 'xlsx' : 'csv'}`;
+    document.body.appendChild(a);
+    a.click();
+    window.URL.revokeObjectURL(url);
+    document.body.removeChild(a);
+    
+    alert('Export completed successfully!');
+  } catch (error: any) {
+    console.error('Export error:', error);
+    alert('Export failed: ' + error.message);
+  } finally {
+    setLoading(false);
+  }
+};
+
+
   // Content Management State
   const [pages, setPages] = useState<ContentPage[]>([]);
   const [editingPage, setEditingPage] = useState<ContentPage | null>(null);
@@ -44,9 +72,14 @@ const Admin: React.FC = () => {
     if (userData) {
       const userObj = JSON.parse(userData);
       setUser(userObj);
+          // RESTRICT ACCESS - Editors can only see content management
+      if (userObj.role === 'redactor') {
+        setActiveTab('content'); // Force content tab
+        // Hide import/export tabs completely for editors
+      }
       
       if (userObj.role !== 'admin' && userObj.role !== 'redactor') {
-        navigate('/dashboard');
+        navigate('/');
       }
     } else {
       navigate('/login');
@@ -167,38 +200,46 @@ const Admin: React.FC = () => {
       <h1 className="text-2xl font-bold mb-2">Admin Panel</h1>
       <p className="text-gray-600 mb-6">Welcome, {user.username} ({user.role})</p>
       
-      {/* Tab Navigation */}
+      {/* Tab Navigation - Hide import/export for editors */}
       <div className="flex border-b mb-6">
-        <button
-          className={`px-4 py-2 font-medium ${
-            activeTab === 'import' 
-              ? 'border-b-2 border-blue-500 text-blue-600' 
-              : 'text-gray-500'
-          }`}
-          onClick={() => setActiveTab('import')}
-        >
-          Import Data
-        </button>
-        <button
-          className={`px-4 py-2 font-medium ${
-            activeTab === 'export' 
-              ? 'border-b-2 border-blue-500 text-blue-600' 
-              : 'text-gray-500'
-          }`}
-          onClick={() => setActiveTab('export')}
-        >
-          Export Data
-        </button>
-        <button
-          className={`px-4 py-2 font-medium ${
-            activeTab === 'content' 
-              ? 'border-b-2 border-blue-500 text-blue-600' 
-              : 'text-gray-500'
-          }`}
-          onClick={() => setActiveTab('content')}
-        >
-          Content Management
-        </button>
+        {(user.role === 'admin' || user.role === 'redactor') && (
+          <button
+            className={`px-4 py-2 font-medium ${
+              activeTab === 'content' 
+                ? 'border-b-2 border-blue-500 text-blue-600' 
+                : 'text-gray-500'
+            }`}
+            onClick={() => setActiveTab('content')}
+          >
+            Content Management
+          </button>
+        )}
+        
+        {/* Only show import/export for admins */}
+        {user.role === 'admin' && (
+          <>
+            <button
+              className={`px-4 py-2 font-medium ${
+                activeTab === 'import' 
+                  ? 'border-b-2 border-blue-500 text-blue-600' 
+                  : 'text-gray-500'
+              }`}
+              onClick={() => setActiveTab('import')}
+            >
+              Import Data
+            </button>
+            <button
+              className={`px-4 py-2 font-medium ${
+                activeTab === 'export' 
+                  ? 'border-b-2 border-blue-500 text-blue-600' 
+                  : 'text-gray-500'
+              }`}
+              onClick={() => setActiveTab('export')}
+            >
+              Export Data
+            </button>
+          </>
+        )}
       </div>
 
       {/* Import Tab */}
@@ -255,7 +296,41 @@ const Admin: React.FC = () => {
       {activeTab === 'export' && (
         <div>
           <h2 className="text-xl font-bold mb-4">Export Data</h2>
-          <p className="text-gray-600">Export functionality coming soon...</p>
+          <div className="max-w-md space-y-4">
+            <div>
+              <label className="block text-sm font-medium mb-2">Export Type:</label>
+              <select 
+                value={modelType} 
+                onChange={(e) => setModelType(e.target.value)}
+                className="border p-2 w-full rounded"
+              >
+                <option value="fines">Fines</option>
+                <option value="accidents">Accidents</option>
+                <option value="traffic_lights">Traffic Lights</option>
+                <option value="evacuations">Evacuations</option>
+              </select>
+            </div>
+            
+            <div>
+              <label className="block text-sm font-medium mb-2">Format:</label>
+              <select 
+                value={exportFormat} 
+                onChange={(e) => setExportFormat(e.target.value)}
+                className="border p-2 w-full rounded"
+              >
+                <option value="csv">CSV</option>
+                <option value="excel">Excel</option>
+              </select>
+            </div>
+            
+            <button 
+              onClick={handleExport}
+              disabled={loading}
+              className="bg-green-500 text-white px-4 py-2 rounded disabled:opacity-50 hover:bg-green-600 transition"
+            >
+              {loading ? 'Exporting...' : 'Export Data'}
+            </button>
+          </div>
         </div>
       )}
 

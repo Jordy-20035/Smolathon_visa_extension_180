@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from "react";
 import { ChevronRight, Phone, Mail, MapPin, Clock, Users, Shield, Heart, Zap, ArrowRight, Calendar, Star, CheckCircle } from "lucide-react";
-import logo from "../assets/logo.jpg"; // adjust path if needed
+import logo from "../assets/logo.jpg"; 
+import { ApiService } from '../api/services';
+import { ContentPage } from '../types';
 
 
 // Enhanced data with more engaging content
@@ -107,6 +109,8 @@ const stats = [
 export default function Home() {
   const [currentSlide, setCurrentSlide] = useState(0);
   const [isVisible, setIsVisible] = useState(false);
+  const [dynamicNews, setDynamicNews] = useState<ContentPage[]>([]);
+  const [contentLoading, setContentLoading] = useState(true);
 
   useEffect(() => {
     setIsVisible(true);
@@ -115,6 +119,30 @@ export default function Home() {
     }, 5000);
     return () => clearInterval(interval);
   }, []);
+
+  useEffect(() => {
+  setIsVisible(true);
+  const interval = setInterval(() => {
+    setCurrentSlide(prev => (prev + 1) % 3);
+  }, 5000);
+
+  // Load dynamic content from CMS
+  const loadDynamicContent = async () => {
+    try {
+      const newsPages = await ApiService.getContentPages('news');
+      setDynamicNews(newsPages);
+    } catch (error) {
+      console.error('Failed to load dynamic content:', error);
+      // Keep using hardcoded content if API fails
+    } finally {
+      setContentLoading(false);
+    }
+  };
+
+  loadDynamicContent();
+
+  return () => clearInterval(interval);
+}, []);
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -377,7 +405,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* News Section Enhanced */}
+      {/* News Section Enhanced - Now with Dynamic Content */}
       <section className="py-20 px-4 bg-white">
         <div className="max-w-7xl mx-auto">
           <div className="flex justify-between items-center mb-16">
@@ -395,10 +423,61 @@ export default function Home() {
             </button>
           </div>
           
+          {/* Show loading state */}
+          {contentLoading && (
+            <div className="text-center py-8">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#62a744] mx-auto"></div>
+              <p className="text-gray-600 mt-2">Загрузка новостей...</p>
+            </div>
+          )}
+          
           <div className="grid md:grid-cols-3 gap-8">
-            {news.map((item, index) => (
+            {/* DYNAMIC NEWS from CMS */}
+            {dynamicNews
+              .filter(page => page.is_published)
+              .slice(0, 3) // Show only latest 3
+              .map((page) => (
+                <article 
+                  key={page.id}
+                  className="group bg-gray-50 rounded-2xl overflow-hidden hover:shadow-xl transition-all duration-500 cursor-pointer transform hover:-translate-y-2"
+                >
+                  <div className="p-8">
+                    <div className="flex items-center justify-between mb-4">
+                      <span className="px-3 py-1 bg-[#62a744] text-white text-xs font-semibold rounded-full">
+                        Новость
+                      </span>
+                      <div className="flex items-center gap-2 text-sm text-gray-500">
+                        <Calendar className="w-4 h-4" />
+                        {new Date(page.created_at).toLocaleDateString('ru-RU')}
+                      </div>
+                    </div>
+                    
+                    <h3 className="text-xl font-bold mb-4 text-gray-900 group-hover:text-[#62a744] transition-colors leading-tight">
+                      {page.title}
+                    </h3>
+                    <p className="text-gray-600 mb-4 leading-relaxed line-clamp-3">
+                      {page.content.length > 150 
+                        ? page.content.substring(0, 150) + '...' 
+                        : page.content
+                      }
+                    </p>
+                    
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2 text-sm text-gray-500">
+                        <Users className="w-4 h-4" />
+                        {/* You can add view counts later */}
+                      </div>
+                      <ChevronRight className="w-5 h-5 text-gray-400 group-hover:text-[#62a744] group-hover:translate-x-1 transition-all" />
+                    </div>
+                  </div>
+                </article>
+              ))
+            }
+            
+            {/* HARDCODED NEWS (fallback when no dynamic content) */}
+            {(dynamicNews.length === 0 || !contentLoading) && news.map((item, index) => (
               <article 
-                key={index}
+                key={`hardcoded-${index}`}
                 className="group bg-gray-50 rounded-2xl overflow-hidden hover:shadow-xl transition-all duration-500 cursor-pointer transform hover:-translate-y-2"
               >
                 <div className="p-8">
@@ -430,6 +509,14 @@ export default function Home() {
               </article>
             ))}
           </div>
+          
+          {/* Show message when no dynamic content */}
+          {dynamicNews.length === 0 && !contentLoading && (
+            <div className="text-center mt-8 text-gray-500">
+              <p>Новости загружаются из системы управления контентом</p>
+              <p className="text-sm">Администраторы могут добавлять новости через панель управления</p>
+            </div>
+          )}
         </div>
       </section>
 

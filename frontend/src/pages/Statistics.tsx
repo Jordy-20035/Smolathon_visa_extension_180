@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, BarChart, Bar, PieChart, Pie, Cell, AreaChart, Area } from "recharts";
-import { Calendar, TrendingDown, TrendingUp, AlertTriangle, Users, MapPin, Filter, Download, Eye, BarChart3, Activity, Route, Clock, Map } from "lucide-react";
+import { Calendar, TrendingDown, TrendingUp, AlertTriangle, Users, MapPin, Filter, Download, Eye, BarChart3, Activity, Navigation, Clock, Map } from "lucide-react";
 import { routesData } from "../data/routes";
 
 
@@ -460,7 +460,7 @@ const getStatsSummary = (): StatsSummary => {
         title="Всего маршрутов" 
         value={stats.totalRoutes || 0} 
         change={15.3}
-        icon={Route}
+        icon={Navigation}
         color="green"
         subtitle="За выбранный период"
       />

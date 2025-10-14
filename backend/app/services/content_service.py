@@ -55,6 +55,15 @@ class ContentService:
         self.db.delete(page)
         self.db.commit()
         return True
+    
+    def get_all_pages(self, page_type: Optional[str] = None) -> List[models.ContentPage]:
+        """Get all pages (for admin panel)"""
+        query = self.db.query(models.ContentPage)
+        
+        if page_type:
+            query = query.filter(models.ContentPage.page_type == page_type)
+            
+        return query.order_by(models.ContentPage.created_at.desc()).all()
 
     def get_all_pages_admin(self, page: int = 1, per_page: int = 20) -> dict:
         """Get all pages for admin panel with pagination"""

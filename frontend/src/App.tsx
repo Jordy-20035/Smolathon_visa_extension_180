@@ -9,12 +9,11 @@ import ImportData from './pages/ImportData';
 import ExportData from './pages/ExportData';
 
 
-// Create a separate Navigation component to handle auth state
+// Navigation component to handle auth state
 const Navigation = () => {
   const [user, setUser] = useState<any>(null);
   const location = useLocation();
 
-  // Check authentication on component mount and route changes
   useEffect(() => {
     const userData = localStorage.getItem('user');
     if (userData) {
@@ -22,33 +21,50 @@ const Navigation = () => {
     } else {
       setUser(null);
     }
-  }, [location]); // Re-check when route changes
+  }, [location]);
 
   return (
-    <nav className="flex justify-between items-center bg-white shadow-md px-4 py-2 sticky top-0 z-10">
-      <Link to="/" className="text-xl font-bold text-gray-900">
-        Smolathon
+    <nav className="flex justify-between items-center bg-gradient-to-r from-green-600 to-green-700 shadow-lg px-6 py-3 sticky top-0 z-10">
+      {/* Logo/Brand */}
+      <Link to="/" className="flex items-center space-x-2">
+        <span className="text-xl font-bold text-white">ЦОДД Смоленск</span>
       </Link>
       
-      <div className="space-x-4">
-        <Link to="/" className="hover:text-blue-600">Главный</Link>
+      {/* Navigation Links */}
+      <div className="flex items-center space-x-6">
+        <Link to="/" className="text-white hover:text-green-200 transition font-medium">Главная</Link>
         
-        {/* Show Dashboard for all logged-in users */}
-        {user && (
-          <Link to="/dashboard" className="hover:text-blue-600">Дашборд</Link>
+        {/* Show Dashboard ONLY for admins */}
+        {user && user.role === 'admin' && (
+          <Link to="/dashboard" className="text-white hover:text-green-200 transition font-medium">Дашборд</Link>
         )}
         
-        <Link to="/statistics" className="hover:text-blue-600">Статистики</Link>
+        <Link to="/statistics" className="text-white hover:text-green-200 transition font-medium">Статистика</Link>
         
-        {/* Show Admin link ONLY for admin/redactor users */}
-        {user && (user.role === 'admin' || user.role === 'redactor') && (
-          <Link to="/admin" className="hover:text-blue-600">Админ</Link>
+        {/* Show Admin link ONLY for admin users (NOT editors) */}
+        {user && user.role === 'admin' && (
+          <Link to="/admin" className="text-white hover:text-green-200 transition font-medium">Админ</Link>
         )}
         
-        {/* Show Login/Logout based on auth state */}
+        {/* Show Content Management for editors */}
+        {user && user.role === 'redactor' && (
+          <Link to="/admin" className="text-white hover:text-green-200 transition font-medium">
+            Управление контентом
+          </Link>
+        )}
+        
+        {/* Language Switcher */}
+        <button className="text-white hover:text-green-200 transition font-medium border border-white px-2 py-1 rounded text-sm">
+          EN/RU
+        </button>
+        
+        {/* User Section */}
         {user ? (
-          <div className="inline-flex items-center space-x-2">
-            <span className="text-sm text-gray-600">Welcome, {user.username}</span>
+          <div className="flex items-center space-x-3">
+            <div className="text-white text-sm">
+              <span className="font-medium">{user.username}</span>
+              <span className="text-green-200 ml-2">({user.role})</span>
+            </div>
             <button 
               onClick={() => {
                 localStorage.removeItem('user');
@@ -56,14 +72,14 @@ const Navigation = () => {
                 setUser(null);
                 window.location.href = '/';
               }}
-              className="px-3 py-1 bg-red-500 text-white rounded-lg hover:bg-red-600 transition text-sm"
+              className="px-3 py-1 bg-white text-green-700 rounded-lg hover:bg-green-100 transition font-medium text-sm"
             >
-              Logout
+              Выйти
             </button>
           </div>
         ) : (
-          <Link to="/login" className="px-3 py-1 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition">
-            Login
+          <Link to="/login" className="px-4 py-2 bg-white text-green-700 rounded-lg hover:bg-green-100 transition font-medium">
+            Войти
           </Link>
         )}
       </div>

@@ -17,11 +17,14 @@ const Login: React.FC = () => {
       localStorage.setItem('api_key', userData.api_key);
       localStorage.setItem('user', JSON.stringify(userData));
       
-      // Better redirect logic
-      let redirectPath = '/dashboard';
-      if (userData.role === 'admin' || userData.role === 'redactor') {
-        redirectPath = '/admin'; // Send admins directly to admin panel
+      // redirect logic
+      let redirectPath = '/';
+      if (userData.role === 'admin') {
+        redirectPath = '/dashboard'; 
+      } else if (userData.role === 'redactor') {
+        redirectPath = '/admin'; 
       }
+      // Citizens/guests stay on home page
       
       window.location.href = redirectPath;
     } catch (error: any) {
