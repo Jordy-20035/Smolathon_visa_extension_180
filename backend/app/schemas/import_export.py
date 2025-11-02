@@ -1,4 +1,4 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 from typing import Dict, List, Optional
 from enum import Enum
 
@@ -7,6 +7,8 @@ class FileType(str, Enum):
     EXCEL = "excel"
 
 class ImportRequest(BaseModel):
+    model_config = ConfigDict(protected_namespaces=())
+    
     file_type: FileType
     model_type: str  # "fine", "accident", "traffic_light"
     column_mapping: Dict[str, str]  # {"file_column": "db_column"}
@@ -19,6 +21,8 @@ class ImportResponse(BaseModel):
     errors: List[str]
 
 class ExportRequest(BaseModel):
+    model_config = ConfigDict(protected_namespaces=())
+    
     format: FileType
     query: Optional[str] = None  # Custom SQL query
     model_type: Optional[str] = None  # Export entire model
