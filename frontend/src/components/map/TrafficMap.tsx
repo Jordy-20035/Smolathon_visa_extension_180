@@ -225,7 +225,8 @@ const TrafficMap: React.FC<TrafficMapProps> = ({
                   <strong>Маршрут #{idx + 1}</strong><br />
                   ТС: {route.total_vehicles || 'N/A'}<br />
                   Интенсивность: {route.intensity_per_hour?.toFixed(2) || 'N/A'} ТС/час
-                </Popup>
+                </div>
+              </Popup>
               </CircleMarker>
             ));
         })}
