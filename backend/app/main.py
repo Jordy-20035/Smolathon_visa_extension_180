@@ -6,10 +6,30 @@ from starlette.exceptions import HTTPException as StarletteHTTPException
 from fastapi.responses import JSONResponse
 from app.database import engine, Base
 from app.models import User, Location, Vehicle, Fine, Accident, TrafficLight, ContentPage, Detector, VehicleTrackReading, RoadNetworkEdge
+import logging
 
+logger = logging.getLogger(__name__)
 
 # Create tables on startup
-Base.metadata.create_all(bind=engine)
+def create_tables():
+    """Create database tables and indexes, handling existing objects gracefully"""
+    from sqlalchemy.exc import ProgrammingError
+    
+    try:
+        Base.metadata.create_all(bind=engine, checkfirst=True)
+        logger.info("Database tables created/verified successfully")
+    except ProgrammingError as e:
+        # Handle PostgreSQL-specific errors (like duplicate table/index/relation)
+        error_str = str(e.orig) if hasattr(e, 'orig') else str(e)
+        if any(keyword in error_str for keyword in ['already exists', 'DuplicateTable', 'DuplicateIndex', 'relation']):
+            logger.info("Database objects already exist, skipping creation")
+        else:
+            logger.warning(f"Database initialization note: {e}")
+    except Exception as e:
+        # For other errors, log but don't fail startup
+        logger.warning(f"Database initialization note: {e}")
+
+create_tables()
 
 
 app = FastAPI(
