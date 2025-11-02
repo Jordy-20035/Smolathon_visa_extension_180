@@ -7,6 +7,8 @@ import Dashboard from "./pages/Dashboard";
 import { useEffect, useState } from "react";
 import ImportData from './pages/ImportData';
 import ExportData from './pages/ExportData';
+import JointMovement from './pages/JointMovement';
+import RouteClustering from './pages/RouteClustering';
 
 
 
@@ -41,6 +43,12 @@ const Navigation = () => {
         )}
         
         <Link to="/statistics" className="text-white hover:text-green-200 transition font-medium">Статистика</Link>
+        {user && (user.role === 'admin' || user.role === 'redactor') && (
+          <>
+            <Link to="/joint-movement" className="text-white hover:text-green-200 transition font-medium">Совместное движение</Link>
+            <Link to="/route-clustering" className="text-white hover:text-green-200 transition font-medium">Кластеризация маршрутов</Link>
+          </>
+        )}
         
         {/* Show Admin link ONLY for admin users (NOT editors) */}
         {user && user.role === 'admin' && (
@@ -103,6 +111,8 @@ function App() {
           <Route path="/login" element={<Login />} />
           <Route path="/admin/import" element={<ImportData />} />
           <Route path="/admin/export" element={<ExportData />} />
+          <Route path="/joint-movement" element={<JointMovement />} />
+          <Route path="/route-clustering" element={<RouteClustering />} />
           
         </Routes>
       </main>

@@ -35,4 +35,11 @@ export const api = {
   // Specific endpoints
   exportEvacuations: `${API_BASE_URL}/api/v1/evacuations/export`,
   downloadTemplate: `${API_BASE_URL}/api/v1/evacuations/template`,
+  
+  // Traffic Analysis
+  analyzeJointMovement: `${API_BASE_URL}/api/v1/traffic-analysis/joint-movement`,
+  clusterRoutes: `${API_BASE_URL}/api/v1/traffic-analysis/route-clustering`,
+  getVehicleTrack: (vehicleId: string) => `${API_BASE_URL}/api/v1/traffic-analysis/vehicle-track/${vehicleId}`,
+  getDetectors: `${API_BASE_URL}/api/v1/traffic-analysis/detectors`,
+  buildRoadGraph: `${API_BASE_URL}/api/v1/traffic-analysis/build-graph`,
 };

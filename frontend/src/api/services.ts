@@ -176,4 +176,50 @@ export class ApiService {
       method: 'DELETE',
     });
   }
+
+  // Traffic Analysis Methods
+  static async analyzeJointMovement(params: {
+    target_vehicle_id: string;
+    min_common_nodes?: number;
+    max_time_gap_seconds?: number;
+    max_lead_seconds?: number;
+    start_time?: string;
+    end_time?: string;
+  }) {
+    return this.request(api.analyzeJointMovement, {
+      method: 'POST',
+      body: JSON.stringify(params),
+    });
+  }
+
+  static async clusterRoutes(params: {
+    start_time: string;
+    end_time: string;
+    top_n?: number;
+    min_vehicles_per_route?: number;
+  }) {
+    return this.request(api.clusterRoutes, {
+      method: 'POST',
+      body: JSON.stringify(params),
+    });
+  }
+
+  static async getVehicleTrack(vehicleId: string, startTime?: string, endTime?: string) {
+    const params = new URLSearchParams();
+    if (startTime) params.append('start_time', startTime);
+    if (endTime) params.append('end_time', endTime);
+    const queryString = params.toString();
+    return this.request(`${api.getVehicleTrack(vehicleId)}${queryString ? '?' + queryString : ''}`);
+  }
+
+  static async getDetectors() {
+    return this.request(api.getDetectors);
+  }
+
+  static async buildRoadGraph(maxDistanceMeters?: number) {
+    const params = maxDistanceMeters ? `?max_distance_meters=${maxDistanceMeters}` : '';
+    return this.request(`${api.buildRoadGraph}${params}`, {
+      method: 'POST',
+    });
+  }
 }

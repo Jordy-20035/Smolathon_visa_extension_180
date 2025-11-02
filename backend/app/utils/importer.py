@@ -1,6 +1,6 @@
 import pandas as pd
 import logging
-from typing import Dict, List, Any, Optional
+from typing import Dict, List, Any, Optional, Tuple
 from sqlalchemy.orm import Session
 from sqlalchemy import inspect
 import uuid
@@ -784,3 +784,161 @@ class EvacuationImporter(DataImporter):
             return float(value)
         except (ValueError, TypeError):
             return default
+
+
+class VehicleTrackReadingImporter(DataImporter):
+    """Импортер данных с детекторов транспортных средств"""
+    
+    def import_from_excel(self, file_content: bytes, column_mapping: Dict[str, str], 
+                         detector_coords: Optional[Dict[str, Tuple[float, float]]] = None,
+                         sheet_name: Optional[str] = 0) -> Dict[str, Any]:
+        """
+        Импорт данных с детекторов из Excel файла
+        
+        Ожидаемые колонки (могут быть переименованы через column_mapping):
+        - ID_детектора / detector_id
+        - Временная_метка / timestamp
+        - Идентификатор_ТС / vehicle_identifier
+        - Скорость_прохождения / speed (опционально)
+        
+        Args:
+            file_content: Содержимое Excel файла
+            column_mapping: Маппинг колонок файла на поля БД
+            detector_coords: Словарь {detector_id: (latitude, longitude)} для автоматического создания детекторов
+            sheet_name: Имя листа в Excel файле
+        """
+        from app.models import Detector, VehicleTrackReading
+        
+        try:
+            df = pd.read_excel(BytesIO(file_content), sheet_name=sheet_name)
+            
+            # Применяем маппинг колонок
+            reverse_mapping = {v: k for k, v in column_mapping.items()}
+            df_renamed = df.rename(columns=reverse_mapping)
+            
+            # Проверяем наличие обязательных колонок
+            required_cols = ['detector_id', 'timestamp', 'vehicle_identifier']
+            missing_cols = [col for col in required_cols if col not in df_renamed.columns]
+            if missing_cols:
+                raise ValueError(f"Missing required columns: {missing_cols}")
+            
+            # Создаем кэш детекторов для быстрого доступа
+            detector_cache = {}  # detector_id -> Detector объект
+            
+            # Если передан словарь координат, создаем недостающие детекторы
+            if detector_coords:
+                for detector_id, (lat, lon) in detector_coords.items():
+                    existing = self.db.query(Detector).filter(
+                        Detector.detector_id == str(detector_id)
+                    ).first()
+                    
+                    if not existing:
+                        detector = Detector(
+                            detector_id=str(detector_id),
+                            latitude=lat,
+                            longitude=lon
+                        )
+                        self.db.add(detector)
+                        self.db.flush()
+                        detector_cache[str(detector_id)] = detector
+                    else:
+                        detector_cache[str(detector_id)] = existing
+            
+            success_count = 0
+            error_count = 0
+            errors = []
+            
+            for index, row in df_renamed.iterrows():
+                try:
+                    # Пропускаем пустые строки
+                    detector_id = row.get('detector_id')
+                    timestamp = row.get('timestamp')
+                    vehicle_identifier = row.get('vehicle_identifier')
+                    
+                    if pd.isna(detector_id) or pd.isna(timestamp) or pd.isna(vehicle_identifier):
+                        continue
+                    
+                    # Получаем или создаем детектор
+                    detector_id_str = str(detector_id).strip()
+                    if detector_id_str not in detector_cache:
+                        detector = self.db.query(Detector).filter(
+                            Detector.detector_id == detector_id_str
+                        ).first()
+                        
+                        if detector:
+                            detector_cache[detector_id_str] = detector
+                        else:
+                            # Если детектора нет, пытаемся найти координаты или используем дефолтные
+                            if detector_coords and detector_id_str in detector_coords:
+                                lat, lon = detector_coords[detector_id_str]
+                            else:
+                                # Используем дефолтные координаты (центр Смоленска)
+                                lat, lon = 54.7826, 32.0453
+                            
+                            detector = Detector(
+                                detector_id=detector_id_str,
+                                latitude=lat,
+                                longitude=lon
+                            )
+                            self.db.add(detector)
+                            self.db.flush()
+                            detector_cache[detector_id_str] = detector
+                    
+                    detector_obj = detector_cache[detector_id_str]
+                    
+                    # Парсим временную метку
+                    if isinstance(timestamp, str):
+                        timestamp_dt = pd.to_datetime(timestamp, errors='coerce')
+                    elif isinstance(timestamp, datetime):
+                        timestamp_dt = timestamp
+                    else:
+                        timestamp_dt = pd.to_datetime(timestamp, errors='coerce')
+                    
+                    if pd.isna(timestamp_dt):
+                        errors.append(f"Row {index}: Invalid timestamp: {timestamp}")
+                        error_count += 1
+                        continue
+                    
+                    # Обрабатываем скорость (опционально)
+                    speed = None
+                    if 'speed' in row and not pd.isna(row.get('speed')):
+                        try:
+                            speed = float(row['speed'])
+                        except (ValueError, TypeError):
+                            pass
+                    
+                    # Создаем запись о прохождении
+                    reading = VehicleTrackReading(
+                        detector_id=detector_obj.id,
+                        timestamp=timestamp_dt,
+                        vehicle_identifier=str(vehicle_identifier).strip(),
+                        speed=speed
+                    )
+                    
+                    self.db.add(reading)
+                    success_count += 1
+                    
+                    # Коммитим батчами для производительности
+                    if success_count % 1000 == 0:
+                        self.db.commit()
+                    
+                except Exception as e:
+                    error_count += 1
+                    error_msg = f"Row {index}: {str(e)}"
+                    errors.append(error_msg)
+                    logger.warning(f"Row {index} failed: {e}")
+                    continue
+            
+            self.db.commit()
+            
+            return {
+                "total_processed": len(df_renamed),
+                "successful": success_count,
+                "failed": error_count,
+                "errors": errors[:100]  # Ограничиваем количество ошибок в ответе
+            }
+            
+        except Exception as e:
+            self.db.rollback()
+            logger.error(f"VehicleTrackReading import error: {e}")
+            raise Exception(f"Import failed: {str(e)}")

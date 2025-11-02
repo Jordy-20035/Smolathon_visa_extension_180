@@ -1,11 +1,11 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.config import settings
-from app.routers import auth, data, analytics, import_export, content
+from app.routers import auth, data, analytics, import_export, content, traffic_analysis
 from starlette.exceptions import HTTPException as StarletteHTTPException
 from fastapi.responses import JSONResponse
 from app.database import engine, Base
-from app.models import User, Location, Vehicle, Fine, Accident, TrafficLight, ContentPage
+from app.models import User, Location, Vehicle, Fine, Accident, TrafficLight, ContentPage, Detector, VehicleTrackReading, RoadNetworkEdge
 
 
 # Create tables on startup
@@ -44,6 +44,7 @@ app.include_router(data.router)
 app.include_router(import_export.router)
 app.include_router(analytics.router)
 app.include_router(content.router)
+app.include_router(traffic_analysis.router)
 
 @app.get("/")
 def read_root():

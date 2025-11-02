@@ -127,3 +127,64 @@ class Evacuation(Base):
     created_at = Column(DateTime, default=datetime.utcnow)
     
     location = relationship("Location", back_populates="evacuations")
+
+
+class Detector(Base):
+    """Детектор транспортных средств (датчик) на узле графа дорожной сети"""
+    __tablename__ = "detectors"
+    
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    detector_id = Column(String(100), unique=True, nullable=False)  # ID_детектора из исходных данных
+    latitude = Column(Numeric(10, 8), nullable=False)
+    longitude = Column(Numeric(11, 8), nullable=False)
+    location_id = Column(UUID(as_uuid=True), ForeignKey("locations.id"), nullable=True)
+    description = Column(String(200))
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    
+    location = relationship("Location", backref="detectors")
+    track_readings = relationship("VehicleTrackReading", back_populates="detector")
+    
+    __table_args__ = (
+        Index('idx_detector_id', 'detector_id'),
+        Index('idx_detector_coords', 'latitude', 'longitude'),
+    )
+
+
+class VehicleTrackReading(Base):
+    """Запись прохождения ТС через детектор"""
+    __tablename__ = "vehicle_track_readings"
+    
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    detector_id = Column(UUID(as_uuid=True), ForeignKey("detectors.id"), nullable=False)
+    timestamp = Column(DateTime(timezone=True), nullable=False)  # Временная_метка
+    vehicle_identifier = Column(String(100), nullable=False)  # Идентификатор_ТС
+    speed = Column(Numeric(10, 2))  # Скорость_прохождения (опционально)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    
+    detector = relationship("Detector", back_populates="track_readings")
+    
+    __table_args__ = (
+        Index('idx_track_timestamp', 'timestamp'),
+        Index('idx_track_vehicle', 'vehicle_identifier'),
+        Index('idx_track_detector', 'detector_id'),
+        Index('idx_track_vehicle_timestamp', 'vehicle_identifier', 'timestamp'),
+    )
+
+
+class RoadNetworkEdge(Base):
+    """Ребро графа дорожной сети - участок дороги между двумя детекторами"""
+    __tablename__ = "road_network_edges"
+    
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    from_detector_id = Column(UUID(as_uuid=True), ForeignKey("detectors.id"), nullable=False)
+    to_detector_id = Column(UUID(as_uuid=True), ForeignKey("detectors.id"), nullable=False)
+    distance_meters = Column(Numeric(10, 2))  # Расстояние в метрах
+    average_speed_kmh = Column(Numeric(10, 2))  # Средняя скорость на участке
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    
+    from_detector = relationship("Detector", foreign_keys=[from_detector_id], backref="outgoing_edges")
+    to_detector = relationship("Detector", foreign_keys=[to_detector_id], backref="incoming_edges")
+    
+    __table_args__ = (
+        Index('idx_edge_from_to', 'from_detector_id', 'to_detector_id'),
+    )
